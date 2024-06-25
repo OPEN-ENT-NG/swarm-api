@@ -372,6 +372,30 @@
   "webAuthnPolicyPasswordlessCreateTimeout" : 0,
   "webAuthnPolicyPasswordlessAvoidSameAuthenticatorRegister" : false,
   "webAuthnPolicyPasswordlessAcceptableAaguids" : [ ],
+  "users" : [ {
+    "id" : "6deaef03-4469-4505-9643-6ac3486bd9d5",
+    "createdTimestamp" : 1719318319552,
+    "username" : "user.dev",
+    "enabled" : true,
+    "totp" : false,
+    "emailVerified" : false,
+    "firstName" : "John",
+    "lastName" : "DOE",
+    "email" : "user.dev@yopmail.com",
+    "credentials" : [ {
+      "id" : "8158f5a9-2046-4439-a3f9-4b21fb7e2b31",
+      "type" : "password",
+      "userLabel" : "My password",
+      "createdDate" : 1719318330181,
+      "secretData" : "{\"value\":\"rU+ahidI7cA9rw0XJ7ZTcVtcTnoKdbimidp+5yhZlOQ=\",\"salt\":\"0uvuFFqFL7zccwikn3YmYQ==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-swarm" ],
+    "notBefore" : 0,
+    "groups" : [ ]
+  } ],
   "scopeMappings" : [ {
     "clientScope" : "offline_access",
     "roles" : [ "offline_access" ]
