@@ -1,0 +1,2 @@
+include:
+  - component: $CI_SERVER_FQDN/devops/cicd/gitlab-ci-toolkit/quarkus-default-ci@1.7.0

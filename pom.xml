@@ -17,6 +17,10 @@
     <quarkus.platform.version>3.11.3</quarkus.platform.version>
     <skipITs>true</skipITs>
     <surefire-plugin.version>3.2.5</surefire-plugin.version>
+    <sonar.projectKey>CGI_app-swarm_swarm-api_3d6b8778-b6bc-42b6-b518-47d4659fbf76</sonar.projectKey>
+    <sonar.projectName>swarm-api</sonar.projectName>
+    <sonar.qualitygate.wait>true</sonar.qualitygate.wait>
+    <sonar.coverage.jacoco.xmlReportPaths>target/jacoco-report/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
   </properties>
 
   <dependencyManagement>
@@ -71,12 +75,21 @@
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-container-image-docker</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
       <artifactId>quarkus-junit5</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>io.rest-assured</groupId>
       <artifactId>rest-assured</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-test-security-oidc</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
