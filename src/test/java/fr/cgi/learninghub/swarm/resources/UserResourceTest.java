@@ -19,7 +19,6 @@ public class UserResourceTest {
                     @UserInfo(key = "name", value = "John DOE"),
             }
     )
-
     void testHelloEndpoint() {
         given()
                 .when().get("/users/me")
