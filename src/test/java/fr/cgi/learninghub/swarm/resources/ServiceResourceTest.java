@@ -7,10 +7,9 @@ import io.quarkus.test.security.oidc.UserInfo;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.CoreMatchers.is;
 
 @QuarkusTest
-public class UserResourceTest {
+public class ServiceResourceTest {
 
     @Test
     @TestSecurity(user = "John DOE")
@@ -19,12 +18,10 @@ public class UserResourceTest {
                     @UserInfo(key = "name", value = "John DOE"),
             }
     )
-
-    void testHelloEndpoint() {
+    public void testList() {
         given()
-                .when().get("/users/me")
+                .when().get("/services")
                 .then()
-                .statusCode(200)
-                .body("name", is("John DOE"));
+                .statusCode(200);
     }
 }
