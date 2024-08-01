@@ -9,7 +9,8 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-
+import jakarta.ws.rs.core.Response;
+import java.util.ArrayList;
 import java.util.List;
 
 @Path("/services")
@@ -21,7 +22,19 @@ public class ServiceResource {
     ServiceRepository serviceRepository;
 
     @GET
-    public Uni<List<Service>> list() {
-        return serviceRepository.listAll();
+    public Uni<Response> list() {
+        Service service = new Service();
+        service.setId(Long.valueOf(1));
+        service.setName("Example Service");
+
+        List<Service> services = new ArrayList();
+        services.add(service);
+
+        return Uni.createFrom().item(() -> Response.ok(services).build());
     }
+
+    // @GET
+    // public Uni<List<Service>> list() {
+    //     return serviceRepository.listAll();
+    // }
 }

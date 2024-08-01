@@ -681,8 +681,8 @@
       "clientId": "console",
       "name": "console",
       "description": "",
-      "rootUrl": "http://localdev:3000",
-      "adminUrl": "http://localdev:3000",
+      "rootUrl": "http://localhost:3000",
+      "adminUrl": "http://localhost:3000",
       "baseUrl": "",
       "surrogateAuthRequired": false,
       "enabled": true,
@@ -690,7 +690,8 @@
       "clientAuthenticatorType": "client-secret",
       "secret": "A48tbgcY9VyKxuS5OrhMR1sWl5UJCIzS",
       "redirectUris": [
-        "http://localhost:3000/api/auth/callback/keycloak"
+        "http://localhost:3000/api/auth/callback/keycloak",
+        "http://localhost:8080/*"
       ],
       "webOrigins": [
         "http://localhost:3000"

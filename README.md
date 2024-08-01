@@ -16,7 +16,27 @@ You can run your application in dev mode that enables live coding using:
 ```
 
 > **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at http://localhost:8080/q/dev/. 
-> Swagger at http://localhost:8080/api/q/swagger-ui/
+> Swagger at http://localhost:8080/api/q/swagger-ui/ (see Authenticate with Swagger)
+
+### Authenticate with Swagger
+
+To try the api in swagger you must click on authorize and go to SecurityScheme (OAuth2 ,implicit) with client id only .
+Enter the client id "console". Login with a user. Close the window and you are connected.
+
+If you want to log out you must clear the cookies and do :
+```shell script
+./mvnw clean compile quarkus:dev
+```
+
+### Keycloak config
+
+```bash
+# access keycloak admin
+admin // admin
+
+# authent user
+user.dev // password
+```
 
 ## Add Debug for Java with vscode
 
