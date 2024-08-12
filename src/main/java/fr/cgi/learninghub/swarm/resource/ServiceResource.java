@@ -18,8 +18,12 @@ import java.util.List;
 @Authenticated
 public class ServiceResource {
 
+    private final ServiceRepository serviceRepository;
+
     @Inject
-    ServiceRepository serviceRepository;
+    public ServiceResource(ServiceRepository serviceRepository) {
+        this.serviceRepository = serviceRepository;
+    }
 
     @GET
     public Uni<Response> list() {
@@ -27,7 +31,7 @@ public class ServiceResource {
         service.setId(Long.valueOf(1));
         service.setName("Example Service");
 
-        List<Service> services = new ArrayList();
+        List<Service> services = new ArrayList<>();
         services.add(service);
 
         return Uni.createFrom().item(() -> Response.ok(services).build());
