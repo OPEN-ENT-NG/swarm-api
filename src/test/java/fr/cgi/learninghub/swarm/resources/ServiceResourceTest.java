@@ -14,9 +14,9 @@ public class ServiceResourceTest {
     @Test
     @TestSecurity(user = "John DOE")
     @OidcSecurity(
-            userinfo = {
-                    @UserInfo(key = "name", value = "John DOE"),
-            }
+        userinfo = {
+                @UserInfo(key = "name", value = "John DOE"),
+        }
     )
     public void testList() {
         given()
