@@ -3,20 +3,19 @@ package fr.cgi.learninghub.swarm.repository;
 import java.util.List;
 
 import fr.cgi.learninghub.swarm.entity.Service;
-import io.quarkus.hibernate.reactive.panache.PanacheRepository;
+import io.quarkus.hibernate.reactive.panache.PanacheRepositoryBase;
 import io.quarkus.hibernate.reactive.panache.common.WithSession;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 
+@WithSession
 @ApplicationScoped
-public class ServiceRepository implements PanacheRepository<Service> {
+public class ServiceRepository implements PanacheRepositoryBase<Service, String> {
 
-    @WithSession
     public Uni<List<Service>> listByUsersIds(List<String> userIds) {
         return list("userId IN ?1 ORDER BY userId", userIds);
     }
 
-    @WithSession
     public Uni<List<Service>> listByUsersIdsMultiple(List<String> userIds) {
         String query = "SELECT s FROM Service s " +
             "WHERE s.userId IN (" +
@@ -26,5 +25,11 @@ public class ServiceRepository implements PanacheRepository<Service> {
                 "HAVING COUNT(DISTINCT s2.type) > 1 " +
             ")";
         return list(query, userIds);
+    }
+
+    public Uni<Void> create(List<Service> services) {
+        return persist(services)
+            .chain(voidItem -> flush())
+            .replaceWithVoid();
     }
 }

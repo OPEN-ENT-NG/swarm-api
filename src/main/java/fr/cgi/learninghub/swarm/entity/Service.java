@@ -5,29 +5,29 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import fr.cgi.learninghub.swarm.core.enums.State;
 import fr.cgi.learninghub.swarm.core.enums.Type;
+import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 
 @Entity
 @Table(name = "service", uniqueConstraints = @UniqueConstraint(columnNames = {"type", "user_id"}))
 @Schema(description = "Service entity representing a service in the system")
-public class Service {
+public class Service extends PanacheEntityBase {
 
     @Schema(description = "Auto-generated unique identifier of the service",
-            example = "1")
+            example = "6deaef03-4469-4505-9643-6ac3486bd9d5")
     @Id
-    @GeneratedValue
-    @Column(name = "id")
-    private Long id;
+    private String id;
 
     @Schema(description = "Identifier of the user using the service",
             example = "",
@@ -48,13 +48,13 @@ public class Service {
     private String lastName;
 
     @Schema(description = "Name of the service",
-            example = "",
+            example = "/wp-6deaef03-4469-4505-9643-6ac3486bd9d5",
             required = true)
     @Column(name = "service_name")
     private String serviceName;
 
     @Schema(description = "Structure identifier of the user using the service",
-            example = "0561f703-4e72-46fe-a92e-d887fd27439b",
+            example = "42",
             required = true)
     @Column(name = "structure_id", nullable = false)
     private String structureId;
@@ -88,7 +88,7 @@ public class Service {
 
     // Getter
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
@@ -130,7 +130,7 @@ public class Service {
 
     // Setter
 
-    public Service setId(Long id) {
+    public Service setId(String id) {
         this.id = id;
         return this;
     }
@@ -178,5 +178,24 @@ public class Service {
     public Service setState(State state) {
         this.state = state;
         return this;
+    }
+
+    // Functions
+
+    @Override
+    public String toString() {
+        List<String> result = new ArrayList<>();
+        result.add(String.format("id: %s", this.getId()));
+        result.add(String.format("userId: %s", this.getUserId()));
+        result.add(String.format("firstName: %s", this.getFirstName()));
+        result.add(String.format("lastName: %s", this.getLastName()));
+        result.add(String.format("serviceName: %s", this.getServiceName()));
+        result.add(String.format("structureId: %s", this.getStructureId()));
+        result.add(String.format("type: %s", this.getType()));
+        result.add(String.format("created: %s", this.getCreated()));
+        result.add(String.format("deletionDate: %s", this.getDeletionDate()));
+        result.add(String.format("state: %s", this.getState()));
+        // result.size() == this.getClass().getFields().length should be true
+        return String.format("{\n\t%s\n}", String.join(",\n\t", result));
     }
 }

@@ -37,7 +37,7 @@ public class User {
     @JsonProperty("profiles")
     private Profile profile;
 
-    @Schema(description = "String including a structure unique identifier and its name",
+    @Schema(description = "Unique structure identifier",
             example = "42",
             required = true)
     @JsonProperty("structures")

@@ -29,21 +29,19 @@ import fr.cgi.learninghub.swarm.repository.ServiceRepository;
 public class EntService implements IUserService {
     
     private static final Logger log = Logger.getLogger(EntService.class);
-    private final EntDirectoryClient entDirectoryClient;
-    private final AppConfig appConfig;
+    
+    @Inject
+    AppConfig appConfig;
+
+    @Inject
     ServiceRepository serviceRepository;
 
     @Inject
-    JsonWebToken jwt;
+    @RestClient
+    EntDirectoryClient entDirectoryClient;
 
     @Inject
-    public EntService(@RestClient EntDirectoryClient entDirectoryClient,
-                        AppConfig appConfig,
-                        ServiceRepository serviceRepository) {
-        this.entDirectoryClient = entDirectoryClient;
-        this.appConfig = appConfig;
-        this.serviceRepository = serviceRepository;
-    }
+    JsonWebToken jwt;
 
     // Functions
 
@@ -51,9 +49,8 @@ public class EntService implements IUserService {
         List<ClassInfos> classInfos = new ArrayList<>();
         List<GroupInfos> groupInfos = new ArrayList<>();
 
-        return getAllUsers()
-            .chain(users -> {
-                List<User> students = filterByProfile(users, Profile.STUDENT);
+        return getAllUsers(Profile.STUDENT)
+            .chain(students -> {
                 List<User> studentsFiltered = filterUsersByClassAndGroup(students); // keep only user in class or group predefined
                 return serviceRepository.listByUsersIdsMultiple(getUsersIds(studentsFiltered)) // get services in BDD for this users
                     .chain(services -> {
@@ -79,9 +76,18 @@ public class EntService implements IUserService {
             });
     }
 
-    public Uni<List<User>> getAllUsers() {
+    public Uni<List<User>> getAllUsers() { return getAllUsers(null); }
+
+    public Uni<List<User>> getAllUsers(Profile profile) {
         return getConnectedUserStructures()
-            .chain(uais -> entDirectoryClient.listUserInStructuresByUAI(uais, true))
+            .chain(uais -> {
+                return entDirectoryClient.listUserInStructuresByUAI(uais, true)
+                .chain(users -> Uni.createFrom().item(profile == null ? users : filterByProfile(users, profile)))
+                .onFailure().recoverWithUni(err -> {
+                    log.error(String.format("[SwarmApi@%s::getAllUsers] Failed to list users for UAIs %s : %s", this.getClass().getSimpleName(), uais, err.getMessage()));
+                    return Uni.createFrom().failure(new ENTGetUsersInfosException());
+                });                
+            })
             .onFailure().recoverWithUni(err -> {
                 log.error(String.format("[SwarmApi@%s::getAllUsers] Failed to get structures of connected user : %s", this.getClass().getSimpleName(), err.getMessage()));
                 return Uni.createFrom().failure(new ENTGetStructuresException());
@@ -89,9 +95,7 @@ public class EntService implements IUserService {
     }
 
     public Uni<List<String>> getConnectedUserStructures() {
-        // TODO : get userId thanks to Quarkus token and call ENT to get user infos with this id
-        String userId = jwt.getName();
-
+        String userId = jwt.getName(); // or use getClaim() if userId is stored in an attribute
         return entDirectoryClient.getUserInfos(userId)
             .chain(userInfos -> Uni.createFrom().item(userInfos.getStructuresIds()))
             .onFailure().recoverWithUni(err -> {
