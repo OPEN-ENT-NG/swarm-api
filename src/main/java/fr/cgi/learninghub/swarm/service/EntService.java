@@ -10,6 +10,7 @@ import fr.cgi.learninghub.swarm.exception.ListServiceException;
 import java.util.List;
 import java.util.ArrayList;
 
+import fr.cgi.learninghub.swarm.model.*;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
@@ -17,11 +18,7 @@ import org.jboss.logging.Logger;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import fr.cgi.learninghub.swarm.model.ResponseListUser;
 import fr.cgi.learninghub.swarm.entity.Service;
-import fr.cgi.learninghub.swarm.model.User;
-import fr.cgi.learninghub.swarm.model.ClassInfos;
-import fr.cgi.learninghub.swarm.model.GroupInfos;
 import fr.cgi.learninghub.swarm.repository.ServiceRepository;
 
 
@@ -79,29 +76,26 @@ public class EntService implements IUserService {
     public Uni<List<User>> getAllUsers() { return getAllUsers(null); }
 
     public Uni<List<User>> getAllUsers(Profile profile) {
-        return getConnectedUserStructures()
-            .chain(uais -> {
-                return entDirectoryClient.listUserInStructuresByUAI(uais, true)
-                .chain(users -> Uni.createFrom().item(profile == null ? users : filterByProfile(users, profile)))
-                .onFailure().recoverWithUni(err -> {
-                    log.error(String.format("[SwarmApi@%s::getAllUsers] Failed to list users for UAIs %s : %s", this.getClass().getSimpleName(), uais, err.getMessage()));
-                    return Uni.createFrom().failure(new ENTGetUsersInfosException());
-                });                
-            })
+        return getConnectedUserInfos()
+            .chain(userInfos -> getUsersByUais(userInfos.getStructuresIds(), profile))
             .onFailure().recoverWithUni(err -> {
                 log.error(String.format("[SwarmApi@%s::getAllUsers] Failed to get structures of connected user : %s", this.getClass().getSimpleName(), err.getMessage()));
                 return Uni.createFrom().failure(new ENTGetStructuresException());
             });
     }
 
-    public Uni<List<String>> getConnectedUserStructures() {
-        String userId = jwt.getName(); // or use getClaim() if userId is stored in an attribute
-        return entDirectoryClient.getUserInfos(userId)
-            .chain(userInfos -> Uni.createFrom().item(userInfos.getStructuresIds()))
+    public Uni<List<User>> getUsersByUais(List<String> uais, Profile profile) {
+        return entDirectoryClient.listUserInStructuresByUAI(uais, true)
+            .chain(users -> Uni.createFrom().item(profile == null ? users : filterByProfile(users, profile)))
             .onFailure().recoverWithUni(err -> {
-                log.error(String.format("[SwarmApi@%s::getConnectedUserStructures] Failed to get user infos from ENT client : %s", this.getClass().getSimpleName(), err.getMessage()));
+                log.error(String.format("[SwarmApi@%s::getUsersByUais] Failed to list users for UAIs %s : %s", this.getClass().getSimpleName(), uais, err.getMessage()));
                 return Uni.createFrom().failure(new ENTGetUsersInfosException());
             });
+    }
+
+    public Uni<UserInfos> getConnectedUserInfos() {
+        String userId = jwt.getName(); // or use getClaim() if userId is stored in an attribute
+        return entDirectoryClient.getUserInfos(userId);
     }
 
     // Utils

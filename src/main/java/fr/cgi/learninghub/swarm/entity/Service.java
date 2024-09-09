@@ -86,6 +86,16 @@ public class Service extends PanacheEntityBase {
     @Column(nullable = false)
     private State state = State.SCHEDULED;
 
+    // Constructor
+
+    public Service() { }
+
+    public Service(String userId, String firstName, String lastName) {
+        this.setUserId(userId);
+        this.setFirstName(firstName);
+        this.setLastName(lastName);
+    }
+
     // Getter
 
     public String getId() {
