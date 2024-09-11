@@ -9,7 +9,7 @@ import java.util.List;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 import fr.cgi.learninghub.swarm.model.Group;
-import fr.cgi.learninghub.swarm.model.Class;
+import fr.cgi.learninghub.swarm.model.StudentClass;
 import fr.cgi.learninghub.swarm.model.User;
 
 @Path("/directory")
@@ -25,7 +25,7 @@ public interface EntDirectoryClient {
 
     @GET
     @Path("/class/{classId}")
-    Uni<List<Class>> getClassInfos(@HeaderParam("Cookie") String sessionId,
+    Uni<List<StudentClass>> getClassInfos(@HeaderParam("Cookie") String sessionId,
                                    @PathParam("classId") String classId);
 
     @GET

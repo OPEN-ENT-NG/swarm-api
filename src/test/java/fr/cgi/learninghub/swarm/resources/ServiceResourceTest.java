@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 import static io.restassured.RestAssured.given;
 
 @QuarkusTest
-public class ServiceResourceTest {
+class ServiceResourceTest {
 
     @Test
     @TestSecurity(user = "John DOE")
@@ -18,7 +18,7 @@ public class ServiceResourceTest {
                 @UserInfo(key = "name", value = "John DOE"),
         }
     )
-    public void testList() {
+    void testList() {
         given()
                 .when().get("/services")
                 .then()

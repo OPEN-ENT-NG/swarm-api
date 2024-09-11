@@ -1,6 +1,6 @@
 package fr.cgi.learninghub.swarm.service;
 
-import fr.cgi.learninghub.swarm.model.Service;
+import fr.cgi.learninghub.swarm.entity.Service;
 import fr.cgi.learninghub.swarm.repository.ServiceRepository;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;

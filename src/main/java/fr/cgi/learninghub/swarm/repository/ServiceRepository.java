@@ -2,7 +2,7 @@ package fr.cgi.learninghub.swarm.repository;
 
 import java.util.List;
 
-import fr.cgi.learninghub.swarm.model.Service;
+import fr.cgi.learninghub.swarm.entity.Service;
 import io.quarkus.hibernate.reactive.panache.PanacheRepository;
 import io.quarkus.hibernate.reactive.panache.common.WithSession;
 import io.smallrye.mutiny.Uni;

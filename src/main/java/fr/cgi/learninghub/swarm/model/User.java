@@ -1,6 +1,6 @@
 package fr.cgi.learninghub.swarm.model;
 
-import fr.cgi.learninghub.swarm.model.Class;
+import fr.cgi.learninghub.swarm.model.StudentClass;
 import fr.cgi.learninghub.swarm.model.Structure;
 
 import java.util.List;
@@ -23,7 +23,7 @@ public class User {
     private List<Structure> structures;
 
     @JsonProperty("classes")
-    private List<Class> classes;
+    private List<StudentClass> classes;
 
     @JsonProperty("manualGroups")
     private List<Group> groups;
@@ -46,7 +46,7 @@ public class User {
         return structures;
     }
     
-    public List<Class> getClasses() {
+    public List<StudentClass> getClasses() {
         return classes;
     }
     
@@ -76,7 +76,7 @@ public class User {
         return this;
     }
     
-    public User setClasses(List<Class> classes) {
+    public User setClasses(List<StudentClass> classes) {
         this.classes = classes;
         return this;
     }

@@ -13,12 +13,12 @@ import org.junit.jupiter.api.Test;
 
 import fr.cgi.learninghub.swarm.core.enums.State;
 import fr.cgi.learninghub.swarm.core.enums.Type;
-import fr.cgi.learninghub.swarm.model.Service;
+import fr.cgi.learninghub.swarm.entity.Service;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 
 @QuarkusTest
-public class ServiceRepositoryTest {
+class ServiceRepositoryTest {
     @Inject
     ServiceRepository serviceRepository;
 

@@ -1,4 +1,4 @@
-package fr.cgi.learninghub.swarm.model;
+package fr.cgi.learninghub.swarm.entity;
 
 import org.hibernate.annotations.CreationTimestamp;
 

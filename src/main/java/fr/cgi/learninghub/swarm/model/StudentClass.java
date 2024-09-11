@@ -1,6 +1,6 @@
 package fr.cgi.learninghub.swarm.model;
 
-public class Class {
+public class StudentClass {
     
     private String id;
 
@@ -18,12 +18,12 @@ public class Class {
 
     // Setter
 
-    public Class setId(String id) {
+    public StudentClass setId(String id) {
         this.id = id;
         return this;
     }
 
-    public Class setName(String name) {
+    public StudentClass setName(String name) {
         this.name = name;
         return this;
     }

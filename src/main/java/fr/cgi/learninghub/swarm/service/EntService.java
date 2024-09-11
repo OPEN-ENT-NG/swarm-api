@@ -17,9 +17,9 @@ import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import fr.cgi.learninghub.swarm.model.ResponseListUser;
-import fr.cgi.learninghub.swarm.model.Service;
+import fr.cgi.learninghub.swarm.entity.Service;
 import fr.cgi.learninghub.swarm.model.User;
-import fr.cgi.learninghub.swarm.model.Class;
+import fr.cgi.learninghub.swarm.model.StudentClass;
 import fr.cgi.learninghub.swarm.model.Group;
 import fr.cgi.learninghub.swarm.repository.ServiceRepository;
 
@@ -45,7 +45,7 @@ public class EntService implements IUserService {
     // Functions
 
     public Uni<ResponseListUser> getAndFilterUsers() {
-        List<Class> classInfos = new ArrayList<>();
+        List<StudentClass> classInfos = new ArrayList<>();
         List<Group> groupInfos = new ArrayList<>();
 
         return getAllUsers()
@@ -58,7 +58,7 @@ public class EntService implements IUserService {
 
                         // We get classInfos and groupInfos from users data
                         finalUsers.stream().forEach(user -> {
-                            classInfos.addAll(user.getClasses().stream().filter(c -> !classInfos.stream().map(Class::getId).toList().contains(c.getId())).toList());
+                            classInfos.addAll(user.getClasses().stream().filter(c -> !classInfos.stream().map(StudentClass::getId).toList().contains(c.getId())).toList());
                             groupInfos.addAll(user.getGroups().stream().filter(g -> !groupInfos.stream().map(Group::getId).toList().contains(g.getId())).toList());
                         });
                         return Uni.createFrom().item(new ResponseListUser(finalUsers, classInfos, groupInfos)); // return users, classes, groups (id et name each time)
