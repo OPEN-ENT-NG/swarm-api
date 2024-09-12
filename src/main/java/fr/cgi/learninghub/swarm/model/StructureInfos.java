@@ -1,6 +1,8 @@
 package fr.cgi.learninghub.swarm.model;
 
-public class Structure {
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public class StructureInfos {
     
     private String id;
 
@@ -8,22 +10,24 @@ public class Structure {
 
     // Getter
 
+    @JsonProperty("UAI")
     public String getId() {
         return id;
     }
 
+    @JsonProperty("name")
     public String getName() {
         return name;
     }
 
     // Setter
 
-    public Structure setId(String id) {
+    public StructureInfos setId(String id) {
         this.id = id;
         return this;
     }
 
-    public Structure setName(String name) {
+    public StructureInfos setName(String name) {
         this.name = name;
         return this;
     }

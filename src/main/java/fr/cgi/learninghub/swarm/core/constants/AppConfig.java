@@ -8,7 +8,7 @@ import java.util.List;
 @ApplicationScoped
 public class AppConfig {
 
-    @ConfigProperty(name = "app.classids")
+    @ConfigProperty(name = "app.classaafids")
     private List<String> classIds;
     
     @ConfigProperty(name = "app.groupids")
@@ -16,9 +16,6 @@ public class AppConfig {
     
     @ConfigProperty(name = "app.userservice.name")
     private String userServiceName;
-    
-    @ConfigProperty(name = "app.session.id")
-    private String sessionId;
 
     // Getters
 
@@ -34,16 +31,7 @@ public class AppConfig {
         return userServiceName;
     }
 
-    public String getSessionId() {
-        return sessionId;
-    }
-
     // Setters
-
-    public AppConfig setSessionId(String sessionId) {
-        this.sessionId = sessionId;
-        return this;
-    }
 
     // Functions
 }

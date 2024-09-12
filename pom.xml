@@ -14,7 +14,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-    <quarkus.platform.version>3.11.3</quarkus.platform.version>
+    <quarkus.platform.version>3.14.3</quarkus.platform.version>
     <skipITs>true</skipITs>
     <surefire-plugin.version>3.2.5</surefire-plugin.version>
     <sonar.projectKey>CGI_app-swarm_swarm-api_3d6b8778-b6bc-42b6-b518-47d4659fbf76</sonar.projectKey>

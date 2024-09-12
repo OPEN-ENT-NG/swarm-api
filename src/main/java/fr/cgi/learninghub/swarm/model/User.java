@@ -1,16 +1,16 @@
 package fr.cgi.learninghub.swarm.model;
 
-import fr.cgi.learninghub.swarm.model.StudentClass;
-import fr.cgi.learninghub.swarm.model.Structure;
+import fr.cgi.learninghub.swarm.model.ClassInfos;
+import fr.cgi.learninghub.swarm.model.StructureInfos;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class User {
-    
-    @JsonProperty("id")
+
+    @JsonProperty("login")
     private String id;
 
     @JsonProperty("firstName")
@@ -20,13 +20,13 @@ public class User {
     private String lastName;
 
     @JsonProperty("structures")
-    private List<Structure> structures;
+    private String structure;
 
     @JsonProperty("classes")
-    private List<StudentClass> classes;
+    private List<ClassInfos> classes;
 
-    @JsonProperty("manualGroups")
-    private List<Group> groups;
+    // @JsonProperty("manualGroups")
+    // private List<StudentGroup> groups;
 
     // Getter
 
@@ -42,17 +42,17 @@ public class User {
         return lastName;
     }
 
-    public List<Structure> getStructures() {
-        return structures;
+    public String getStructure() {
+        return structure;
     }
     
-    public List<StudentClass> getClasses() {
+    public List<ClassInfos> getClasses() {
         return classes;
     }
     
-    public List<Group> getGroups() {
-        return groups;
-    }
+    // public List<StudentGroup> getGroups() {
+    //     return groups;
+    // }
 
     // Setter
 
@@ -71,28 +71,40 @@ public class User {
         return this;
     }
 
-    public User setStructures(List<Structure> structures) {
-        this.structures = structures;
+    public User setStructure(String structure) {
+        this.structure = structure;
         return this;
     }
     
-    public User setClasses(List<StudentClass> classes) {
-        this.classes = classes;
+    public User setClasses(List<String> classes) {
+        List<ClassInfos> localClasses = new ArrayList<>();
+
+        if (classes != null) {
+            classes.stream().forEach(c -> {
+                int dollarIndex = c.indexOf("$");
+                String classId = c.substring(0, dollarIndex);
+                String className = c.substring(dollarIndex + 1);
+                localClasses.add(new ClassInfos().setId(classId).setName(className));
+            });
+        }
+
+        this.classes = localClasses;
         return this;
     }
     
-    public User setGroups(List<Group> groups) {
-        this.groups = groups;
-        return this;
-    }
+    // public User setGroups(List<StudentGroup> groups) {
+    //     this.groups = groups;
+    //     return this;
+    // }
 
     // Functions
 
     public List<String> getClassIds() {
-        return this.classes.stream().map(c -> c.getId()).collect(Collectors.toList());
+        return this.classes.stream().map(c -> c.getId()).toList();
     }
 
     public List<String> getGroupIds() {
-        return this.groups.stream().map(group -> group.getId()).collect(Collectors.toList());
+        return new ArrayList();
+        // return this.groups.stream().map(group -> group.getId()).toList();
     }
 }

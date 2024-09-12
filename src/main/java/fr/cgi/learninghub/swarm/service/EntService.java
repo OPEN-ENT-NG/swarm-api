@@ -8,6 +8,7 @@ import fr.cgi.learninghub.swarm.exception.ListServiceException;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Base64;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
@@ -19,8 +20,8 @@ import jakarta.inject.Inject;
 import fr.cgi.learninghub.swarm.model.ResponseListUser;
 import fr.cgi.learninghub.swarm.entity.Service;
 import fr.cgi.learninghub.swarm.model.User;
-import fr.cgi.learninghub.swarm.model.StudentClass;
-import fr.cgi.learninghub.swarm.model.Group;
+import fr.cgi.learninghub.swarm.model.ClassInfos;
+import fr.cgi.learninghub.swarm.model.GroupInfos;
 import fr.cgi.learninghub.swarm.repository.ServiceRepository;
 
 
@@ -45,8 +46,8 @@ public class EntService implements IUserService {
     // Functions
 
     public Uni<ResponseListUser> getAndFilterUsers() {
-        List<StudentClass> classInfos = new ArrayList<>();
-        List<Group> groupInfos = new ArrayList<>();
+        List<ClassInfos> classInfos = new ArrayList<>();
+        List<GroupInfos> groupInfos = new ArrayList<>();
 
         return getAllUsers()
             .chain(users -> {
@@ -55,11 +56,11 @@ public class EntService implements IUserService {
                     .chain(services -> {
                         List<String> userIdsToFilter = services.stream().map(Service::getUserId).toList();
                         List<User> finalUsers = removeUsersByIds(usersFiltered, userIdsToFilter);
-
+                        
                         // We get classInfos and groupInfos from users data
                         finalUsers.stream().forEach(user -> {
-                            classInfos.addAll(user.getClasses().stream().filter(c -> !classInfos.stream().map(StudentClass::getId).toList().contains(c.getId())).toList());
-                            groupInfos.addAll(user.getGroups().stream().filter(g -> !groupInfos.stream().map(Group::getId).toList().contains(g.getId())).toList());
+                            classInfos.addAll(user.getClasses().stream().filter(c -> !classInfos.stream().map(ClassInfos::getId).toList().contains(c.getId())).toList());
+                            // groupInfos.addAll(user.getGroups().stream().filter(g -> !groupInfos.stream().map(StudentGroup::getId).toList().contains(g.getId())).toList());
                         });
                         return Uni.createFrom().item(new ResponseListUser(finalUsers, classInfos, groupInfos)); // return users, classes, groups (id et name each time)
                     })
@@ -77,14 +78,7 @@ public class EntService implements IUserService {
 
     public Uni<List<User>> getAllUsers() {
         return getConnectedUserStructures()
-            .chain(structuresIds -> {
-                return Multi.createFrom().iterable(structuresIds)
-                    .onItem().transformToUniAndMerge(structureId -> entDirectoryClient.getUsersByStructure(appConfig.getSessionId(), structureId))
-                    .onItem().transformToMulti(responses -> Multi.createFrom().items(responses.stream()))
-                    .merge()
-                    .collect()
-                    .asList();
-            })
+            .chain(uais -> entDirectoryClient.listUserInStructuresByUAI(uais, true))
             .onFailure().recoverWithUni(err -> {
                 log.error(String.format("[SwarmApi@%s::getAllUsers] Failed to get structures of connected user : %s", this.getClass().getSimpleName(), err.getMessage()));
                 return Uni.createFrom().failure(new ENTGetStructuresException());
@@ -92,11 +86,14 @@ public class EntService implements IUserService {
     }
 
     public Uni<List<String>> getConnectedUserStructures() {
-        // TODO : get userId thanks to Quarkus token and call ENT to get user infos with this id
-        List<String> structuresIds = new ArrayList<>();
-        structuresIds.add("0561f703-4e72-46fe-a92e-d887fd27439b"); // TODO : remove (this is for tests)
-        structuresIds.add("391b8dfa-a7d4-4d9f-90ca-d029a2d64281"); // TODO : remove (this is for tests)
-        return Uni.createFrom().item(structuresIds);
+        String userId = "e3685a82-79d2-4c23-89b8-1f8345902266"; // TODO : get userId thanks to Quarkus token and call ENT to get user infos with this id
+
+        return entDirectoryClient.getUserInfos(userId)
+            .chain(userInfos -> Uni.createFrom().item(userInfos.getStructuresIds()))
+            .onFailure().recoverWithUni(err -> {
+                log.error(String.format("[SwarmApi@%s::getConnectedUserStructures] Failed to get user infos from ENT client : %s", this.getClass().getSimpleName(), err.getMessage()));
+                return Uni.createFrom().failure(new ENTGetUsersInfosException());
+            });
     }
 
     // Utils

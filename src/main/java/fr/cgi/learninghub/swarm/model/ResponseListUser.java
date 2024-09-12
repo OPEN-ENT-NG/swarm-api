@@ -7,11 +7,11 @@ public class ResponseListUser {
     
     private List<User> users;
     
-    private List<StudentClass> classes;
+    private List<ClassInfos> classes;
     
-    private List<Group> groups;
+    private List<GroupInfos> groups;
 
-    public ResponseListUser(List<User> users, List<StudentClass> classes, List<Group> groups) {
+    public ResponseListUser(List<User> users, List<ClassInfos> classes, List<GroupInfos> groups) {
         this.setUsers(users);
         this.setClasses(classes);
         this.setGroups(groups);
@@ -29,11 +29,11 @@ public class ResponseListUser {
         return users;
     }
 
-    public List<StudentClass> getClasses() {
+    public List<ClassInfos> getClasses() {
         return classes;
     }
 
-    public List<Group> getGroups() {
+    public List<GroupInfos> getGroups() {
         return groups;
     }
 
@@ -44,12 +44,12 @@ public class ResponseListUser {
         return this;
     }
 
-    public ResponseListUser setClasses(List<StudentClass> classes) {
+    public ResponseListUser setClasses(List<ClassInfos> classes) {
         this.classes = classes;
         return this;
     }
 
-    public ResponseListUser setGroups(List<Group> groups) {
+    public ResponseListUser setGroups(List<GroupInfos> groups) {
         this.groups = groups;
         return this;
     }

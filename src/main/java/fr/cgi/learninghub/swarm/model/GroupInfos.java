@@ -1,6 +1,6 @@
 package fr.cgi.learninghub.swarm.model;
 
-public class Group {
+public class GroupInfos {
     
     private String id;
 
@@ -18,12 +18,12 @@ public class Group {
 
     // Setter
 
-    public Group setId(String id) {
+    public GroupInfos setId(String id) {
         this.id = id;
         return this;
     }
 
-    public Group setName(String name) {
+    public GroupInfos setName(String name) {
         this.name = name;
         return this;
     }
