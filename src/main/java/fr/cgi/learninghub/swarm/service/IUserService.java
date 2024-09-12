@@ -7,12 +7,11 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.List;
 
-@ApplicationScoped
 public interface IUserService {
 
-    public Uni<List<String>> getConnectedUserStructures();
+    Uni<List<String>> getConnectedUserStructures();
     
-    public Uni<List<User>> getAllUsers();
+    Uni<List<User>> getAllUsers();
     
-    public Uni<ResponseListUser> getAndFilterUsers();
+    Uni<ResponseListUser> getAndFilterUsers();
 }

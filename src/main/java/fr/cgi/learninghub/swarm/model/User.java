@@ -6,26 +6,46 @@ import fr.cgi.learninghub.swarm.model.StructureInfos;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+
+@Schema(description = "User object representing a user in the system")
 public class User {
 
-    @JsonProperty("login")
+    @Schema(description = "Unique identifier (as login) of the user",
+            example = "john.doe",
+            required = true)
+    @JsonAlias("login")
     private String id;
 
+    @Schema(description = "First name of the user",
+            example = "John",
+            required = true)
     @JsonProperty("firstName")
     private String firstName;
 
+    @Schema(description = "Last name of the user",
+            example = "DOE",
+            required = true)
     @JsonProperty("lastName")
     private String lastName;
 
+    @Schema(description = "String including a structure unique identifier and its name",
+            example = "42$TES 1",
+            required = true)
     @JsonProperty("structures")
     private String structure;
 
+    @Schema(description = "List of classes associated with the user",
+            example = "[{\"id\": \"e1ef8cb4-d7dc-4c9d-9b98-8c0270cfac0b\", \"name\": \"1TES2\"}]",
+            required = true)
     @JsonProperty("classes")
     private List<ClassInfos> classes;
 
-    // @JsonProperty("manualGroups")
+    // @JsonAlias("manualGroups")
     // private List<StudentGroup> groups;
 
     // Getter
@@ -99,10 +119,12 @@ public class User {
 
     // Functions
 
+    @JsonIgnore
     public List<String> getClassIds() {
         return this.classes.stream().map(c -> c.getId()).toList();
     }
 
+    @JsonIgnore
     public List<String> getGroupIds() {
         return new ArrayList();
         // return this.groups.stream().map(group -> group.getId()).toList();

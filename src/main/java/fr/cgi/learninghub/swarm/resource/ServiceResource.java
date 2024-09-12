@@ -14,11 +14,22 @@ import jakarta.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.microprofile.openapi.annotations.OpenAPIDefinition;
+import org.eclipse.microprofile.openapi.annotations.info.Info;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.jboss.logging.Logger;
 
 @Path("/services")
 @Produces(MediaType.APPLICATION_JSON)
 @Authenticated
+@Tag(name = "ServiceResource", description = "This API is used to manage service entities")
+@OpenAPIDefinition(
+    info = @Info(
+        title = "ServiceResource API",
+        version = "1.0.0",
+        description = "This API is used to manage service entities"
+    )
+)
 public class ServiceResource {
 
     private static final Logger log = Logger.getLogger(ServiceResource.class);

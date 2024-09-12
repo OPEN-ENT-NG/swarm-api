@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Base64;
 
+import io.quarkus.arc.lookup.LookupIfProperty;
+import io.quarkus.arc.lookup.LookupUnlessProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
@@ -23,7 +25,6 @@ import fr.cgi.learninghub.swarm.model.User;
 import fr.cgi.learninghub.swarm.model.ClassInfos;
 import fr.cgi.learninghub.swarm.model.GroupInfos;
 import fr.cgi.learninghub.swarm.repository.ServiceRepository;
-
 
 
 @ApplicationScoped
@@ -86,7 +87,8 @@ public class EntService implements IUserService {
     }
 
     public Uni<List<String>> getConnectedUserStructures() {
-        String userId = "e3685a82-79d2-4c23-89b8-1f8345902266"; // TODO : get userId thanks to Quarkus token and call ENT to get user infos with this id
+        // TODO : get userId thanks to Quarkus token and call ENT to get user infos with this id
+        String userId = "e3685a82-79d2-4c23-89b8-1f8345902266";
 
         return entDirectoryClient.getUserInfos(userId)
             .chain(userInfos -> Uni.createFrom().item(userInfos.getStructuresIds()))
