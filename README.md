@@ -28,6 +28,15 @@ If you want to log out you must clear the cookies and do :
 ./mvnw clean compile quarkus:dev
 ```
 
+### Use ENT API
+
+- [Consume ENT API](docs/ent-auth-api/ent-auth-api.md)
+
+### Provisioning user ENT with keycloak
+
+- [Provisioning User ENT](docs/user-provisioning/user-provisioning.md)
+
+
 ### Keycloak config
 
 ```bash
