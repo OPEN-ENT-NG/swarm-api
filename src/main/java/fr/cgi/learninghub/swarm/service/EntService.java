@@ -2,20 +2,18 @@ package fr.cgi.learninghub.swarm.service;
 
 import fr.cgi.learninghub.swarm.clients.EntDirectoryClient;
 import fr.cgi.learninghub.swarm.core.constants.AppConfig;
+import fr.cgi.learninghub.swarm.core.enums.Profile;
 import fr.cgi.learninghub.swarm.exception.ENTGetStructuresException;
 import fr.cgi.learninghub.swarm.exception.ENTGetUsersInfosException;
 import fr.cgi.learninghub.swarm.exception.ListServiceException;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Base64;
 
-import io.quarkus.arc.lookup.LookupIfProperty;
-import io.quarkus.arc.lookup.LookupUnlessProperty;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
-import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -36,6 +34,9 @@ public class EntService implements IUserService {
     ServiceRepository serviceRepository;
 
     @Inject
+    JsonWebToken jwt;
+
+    @Inject
     public EntService(@RestClient EntDirectoryClient entDirectoryClient,
                         AppConfig appConfig,
                         ServiceRepository serviceRepository) {
@@ -52,18 +53,19 @@ public class EntService implements IUserService {
 
         return getAllUsers()
             .chain(users -> {
-                List<User> usersFiltered = filterUsersByClassAndGroup(users); // keep only user in class or group predefined
-                return serviceRepository.listByUsersIdsMultiple(getUsersIds(usersFiltered)) // get services in BDD for this users
+                List<User> students = filterByProfile(users, Profile.STUDENT);
+                List<User> studentsFiltered = filterUsersByClassAndGroup(students); // keep only user in class or group predefined
+                return serviceRepository.listByUsersIdsMultiple(getUsersIds(studentsFiltered)) // get services in BDD for this users
                     .chain(services -> {
                         List<String> userIdsToFilter = services.stream().map(Service::getUserId).toList();
-                        List<User> finalUsers = removeUsersByIds(usersFiltered, userIdsToFilter);
+                        List<User> finalStudents = removeUsersByIds(studentsFiltered, userIdsToFilter);
                         
                         // We get classInfos and groupInfos from users data
-                        finalUsers.stream().forEach(user -> {
+                        finalStudents.stream().forEach(user -> {
                             classInfos.addAll(user.getClasses().stream().filter(c -> !classInfos.stream().map(ClassInfos::getId).toList().contains(c.getId())).toList());
                             // groupInfos.addAll(user.getGroups().stream().filter(g -> !groupInfos.stream().map(StudentGroup::getId).toList().contains(g.getId())).toList());
                         });
-                        return Uni.createFrom().item(new ResponseListUser(finalUsers, classInfos, groupInfos)); // return users, classes, groups (id et name each time)
+                        return Uni.createFrom().item(new ResponseListUser(finalStudents, classInfos, groupInfos)); // return users, classes, groups (id et name each time)
                     })
                     .onFailure().recoverWithUni(err -> {
                         log.error(String.format("[SwarmApi@%s::getAndFilterUsers] Failed to list services : %s", this.getClass().getSimpleName(), err.getMessage()));
@@ -88,7 +90,7 @@ public class EntService implements IUserService {
 
     public Uni<List<String>> getConnectedUserStructures() {
         // TODO : get userId thanks to Quarkus token and call ENT to get user infos with this id
-        String userId = "e3685a82-79d2-4c23-89b8-1f8345902266";
+        String userId = jwt.getName();
 
         return entDirectoryClient.getUserInfos(userId)
             .chain(userInfos -> Uni.createFrom().item(userInfos.getStructuresIds()))
@@ -102,6 +104,10 @@ public class EntService implements IUserService {
 
     private List<User> removeUsersByIds(List<User> users, List<String> userIdsToFilter) {
         return users.stream().filter(user -> !userIdsToFilter.contains(user.getId())).toList();     
+    }
+
+    private List<User> filterByProfile(List<User> users, Profile profile) {
+        return users.stream().filter(user -> user.getProfile() != null && user.getProfile() == profile).toList();
     }
 
     private List<User> filterUsersByClassAndGroup(List<User> users) {

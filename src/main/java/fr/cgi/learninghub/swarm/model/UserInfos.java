@@ -1,7 +1,5 @@
 package fr.cgi.learninghub.swarm.model;
 
-import fr.cgi.learninghub.swarm.model.StructureInfos;
-
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

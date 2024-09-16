@@ -13,7 +13,8 @@ class UserTest {
     @Test
     void testGetClassIds() {
         User user = new User().setClasses(Arrays.asList("42$1TES 2", "42$1TES 1"));
-        assertEquals(Arrays.asList("42", "42"), user.getClassIds());
+        assertEquals(Arrays.asList("42$1TES 2", "42$1TES 1"), user.getClassIds());
+        assertEquals(Arrays.asList("1TES 2", "1TES 1"), user.getClasses().stream().map(ClassInfos::getName).toList());
     }
     
     // @Test

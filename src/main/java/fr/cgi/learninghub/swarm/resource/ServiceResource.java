@@ -1,7 +1,6 @@
 package fr.cgi.learninghub.swarm.resource;
 
 import fr.cgi.learninghub.swarm.entity.Service;
-import fr.cgi.learninghub.swarm.repository.ServiceRepository;
 import fr.cgi.learninghub.swarm.service.ServiceService;
 import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Uni;

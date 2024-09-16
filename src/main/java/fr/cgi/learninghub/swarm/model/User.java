@@ -1,7 +1,6 @@
 package fr.cgi.learninghub.swarm.model;
 
-import fr.cgi.learninghub.swarm.model.ClassInfos;
-import fr.cgi.learninghub.swarm.model.StructureInfos;
+import fr.cgi.learninghub.swarm.core.enums.Profile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,14 +32,19 @@ public class User {
     @JsonProperty("lastName")
     private String lastName;
 
+    @Schema(description = "String describing the profile of the user",
+            example = "Student")
+    @JsonProperty("profiles")
+    private Profile profile;
+
     @Schema(description = "String including a structure unique identifier and its name",
-            example = "42$TES 1",
+            example = "42",
             required = true)
     @JsonProperty("structures")
     private String structure;
 
     @Schema(description = "List of classes associated with the user",
-            example = "[{\"id\": \"e1ef8cb4-d7dc-4c9d-9b98-8c0270cfac0b\", \"name\": \"1TES2\"}]",
+            example = "[{\"id\": \"42$1TES 2\", \"name\": \"1TES 2\"}]",
             required = true)
     @JsonProperty("classes")
     private List<ClassInfos> classes;
@@ -60,6 +64,10 @@ public class User {
 
     public String getLastName() {
         return lastName;
+    }
+
+    public Profile getProfile() {
+        return profile;
     }
 
     public String getStructure() {
@@ -91,6 +99,11 @@ public class User {
         return this;
     }
 
+    public User setProfile(String profile) {
+        this.profile = Profile.getProfile(profile.toUpperCase());
+        return this;
+    }
+
     public User setStructure(String structure) {
         this.structure = structure;
         return this;
@@ -100,11 +113,9 @@ public class User {
         List<ClassInfos> localClasses = new ArrayList<>();
 
         if (classes != null) {
-            classes.stream().forEach(c -> {
-                int dollarIndex = c.indexOf("$");
-                String classId = c.substring(0, dollarIndex);
-                String className = c.substring(dollarIndex + 1);
-                localClasses.add(new ClassInfos().setId(classId).setName(className));
+            classes.forEach(c -> {
+                String className = c.substring(c.indexOf("$") + 1);
+                localClasses.add(new ClassInfos().setId(c).setName(className));
             });
         }
 

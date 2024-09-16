@@ -7,13 +7,13 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 public class ClassInfos {
 
     @Schema(description = "Id of the class",
-            example = "e1ef8cb4-d7dc-4c9d-9b98-8c0270cfac0b",
+            example = "42$1TES 2",
             required = true)
     @JsonProperty("id")
     private String id;
 
     @Schema(description = "Name of the class",
-            example = "1TES2",
+            example = "1TES 2",
             required = true)
     @JsonProperty("name")
     private String name;

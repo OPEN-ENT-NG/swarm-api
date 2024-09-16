@@ -1,9 +1,5 @@
 package fr.cgi.learninghub.swarm.resource;
 
-import fr.cgi.learninghub.swarm.core.constants.AppConfig;
-import io.smallrye.jwt.build.Jwt;
-import org.eclipse.microprofile.jwt.JsonWebToken;
-import fr.cgi.learninghub.swarm.core.enums.UserServiceName;
 import fr.cgi.learninghub.swarm.model.ResponseListUser;
 import fr.cgi.learninghub.swarm.service.EntService;
 import fr.cgi.learninghub.swarm.service.IUserService;
@@ -14,8 +10,6 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-
-import java.util.ArrayList;
 
 import org.eclipse.microprofile.openapi.annotations.OpenAPIDefinition;
 import org.eclipse.microprofile.openapi.annotations.Operation;
@@ -43,11 +37,7 @@ public class UserResource {
     private static final Logger log = Logger.getLogger(UserResource.class);
 
     private final IUserService userService;
-
-    @Inject
-    JsonWebToken jwt;
     
-
     @Inject
     public UserResource(EntService entService) {
         this.userService = entService;
@@ -61,14 +51,5 @@ public class UserResource {
                 schema = @Schema(implementation = ResponseListUser.class, type = SchemaType.ARRAY)))
     public Uni<ResponseListUser> list() {
         return userService.getAndFilterUsers();
-    }
-
-    @GET
-    @Path("/test")
-    public Uni<String> test() {
-        log.info("test: " + jwt.getSubject());
-        log.info("testNae: " + jwt.getName());
-        log.info("testNae: " + jwt.getName());
-        return Uni.createFrom().item("{\"message\":\"OK\"}");
     }
 }
