@@ -10,6 +10,7 @@ import fr.cgi.learninghub.swarm.exception.CreateServiceException;
 import fr.cgi.learninghub.swarm.exception.ENTGetStructuresException;
 import fr.cgi.learninghub.swarm.exception.ENTGetUsersInfosException;
 import fr.cgi.learninghub.swarm.exception.ListServiceException;
+import fr.cgi.learninghub.swarm.exception.DeleteServiceException;
 import fr.cgi.learninghub.swarm.model.*;
 import fr.cgi.learninghub.swarm.repository.ServiceRepository;
 import io.smallrye.mutiny.Uni;
@@ -67,11 +68,19 @@ public class ServiceService {
             .chain(serviceRepository::create)
             .chain(services -> {
                 services.forEach(service -> service.setServiceName(service.getServiceName() + service.getId())); // complete serviceNames with ids
-                return serviceRepository.patch(services);
+                return serviceRepository.patchServiceName(services);
             })
             .onFailure().recoverWithUni(err -> {
                 log.error(String.format("[SwarmApi@%s::create] Failed to create service in database : %s", this.getClass().getSimpleName(), err.getMessage()));
                 return Uni.createFrom().failure(new CreateServiceException());
+            });
+    }
+
+    public Uni<Integer> delete(UpdateServiceBody updateServiceBody) {
+        return serviceRepository.patch(updateServiceBody)
+            .onFailure().recoverWithUni(err -> {
+                log.error(String.format("[SwarmApi@%s::delete] Failed to delete services in database : %s", this.getClass().getSimpleName(), err.getMessage()));
+                return Uni.createFrom().failure(new DeleteServiceException());
             });
     }
 
@@ -81,7 +90,7 @@ public class ServiceService {
                                                                     List<User> students, List<User> filteredStudents, UserInfos userInfos) {
         List<String> usersIds = filteredStudents.stream().map(User::getId).toList();
 
-        return this.serviceRepository.listAllWithFilter(usersIds, search, types)
+        return serviceRepository.listAllWithFilter(usersIds, search, types)
             .chain(services -> {
                 // Calculate total users
                 List<String> finalUsersIds = services.stream().map(Service::getUserId).distinct().toList();
@@ -102,7 +111,7 @@ public class ServiceService {
 
     private Uni<ResponseListService> buildResponseListService(Order order, int page, int limit, List<String> usersIds, List<User> filteredStudents,
                                                             UserInfos userInfos, ResponseListServiceGlobalInfos responseListServiceGlobalInfos) {
-        return this.serviceRepository.listAllWithFilterAndLimit(usersIds, order, page, limit)
+        return serviceRepository.listAllWithFilterAndLimit(usersIds, order, page, limit)
             .chain(services -> {
                 List<ResponseListServiceUser> users = new ArrayList<>();
                 usersIds.forEach(userId -> {
@@ -175,7 +184,7 @@ public class ServiceService {
                 // Find all structures for filtered users
                 List<String> structuresInfosIds = finalStudents.stream().map(User::getStructure).distinct().toList();
                 List<StructureInfos> structuresInfos = userInfos.getStructures().stream().filter(s -> structuresInfosIds.contains(s.getExternalId())).distinct().toList();
-                
+
                 // Find all classes infos for filtered users
                 List<ClassInfos> classesInfos = new ArrayList<>();
                 Set<String> seenIds = new HashSet<>();
@@ -187,7 +196,7 @@ public class ServiceService {
 
                 // Find all groups infos for filtered users
                 // List<ClassInfos> groupsInfos = new ArrayList<>();
-                
+
                 // Find all user infos for filtered users
                 List<UserInfos> usersInfos = finalStudents.stream()
                     .map(student -> {

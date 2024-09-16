@@ -2,13 +2,21 @@ package fr.cgi.learninghub.swarm.repository;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
+import fr.cgi.learninghub.swarm.exception.UpdateServiceBadRequestException;
+import fr.cgi.learninghub.swarm.model.UpdateServiceBody;
+import io.quarkus.hibernate.reactive.panache.PanacheRepositoryBase;
+import io.quarkus.panache.common.Parameters;
+import jakarta.ws.rs.NotFoundException;
 import org.jboss.logging.Logger;
 
 import fr.cgi.learninghub.swarm.core.enums.Order;
 import fr.cgi.learninghub.swarm.exception.CreateServiceException;
 import fr.cgi.learning.hub.swarm.common.enums.Type;
+import fr.cgi.learning.hub.swarm.common.enums.PathType;
+import fr.cgi.learning.hub.swarm.common.enums.State;
 import fr.cgi.learning.hub.swarm.common.entities.Service;
 import io.quarkus.hibernate.reactive.panache.PanacheRepositoryBase;
 import io.quarkus.hibernate.reactive.panache.common.WithSession;
@@ -24,7 +32,7 @@ import jakarta.transaction.Transactional;
 @RegisterForReflection
 @ApplicationScoped
 public class ServiceRepository implements PanacheRepositoryBase<Service, String> {
-    
+
     private static final Logger log = Logger.getLogger(ServiceRepository.class);
 
     public Uni<List<Service>> listAllWithFilter(List<String> usersIds, String search, List<Type> types) {
@@ -89,7 +97,7 @@ public class ServiceRepository implements PanacheRepositoryBase<Service, String>
                     return persistAndFlush(service).onItem().transformToUni(persistedService -> {  // Persist the service
                         List<Service> newCurrentList = new ArrayList<>(currentList);
                         newCurrentList.add(persistedService);  // Add the service to the list
-    
+
                         return Uni.createFrom().item(newCurrentList); // Return the updated list wich gonna replace the final object
                     });
                 })
@@ -108,16 +116,42 @@ public class ServiceRepository implements PanacheRepositoryBase<Service, String>
     }
 
     @Transactional
-    public Uni<List<Service>> patch(List<Service> services) {
+    public Uni<List<Service>> patchServiceName(List<Service> services) {
         List<Uni<Service>> unis = services.stream()
-                .map(service -> patch(service))
+                .map(service -> patchServiceName(service))
                 .toList();
         return Uni.combine().all().unis(unis).with(list -> (List<Service>) list);
     }
 
     @Transactional
-    public Uni<Service> patch(Service service) {
+    public Uni<Service> patchServiceName(Service service) {
         Parameters params = Parameters.with("id", service.getId()).and("serviceName", service.getServiceName());
         return update("serviceName = :serviceName where id = :id", params).replaceWith(service);
+    }
+
+    @Transactional
+    public Uni<Integer> patch(UpdateServiceBody updateServiceBody) {
+        List<String> servicesIds = updateServiceBody.getServicesIds();
+        State state = updateServiceBody.getState();
+        Date deletionDate = updateServiceBody.getDeletionDate();
+
+        if (servicesIds.isEmpty() || (state == null && deletionDate == null)) {
+            return Uni.createFrom().failure(new UpdateServiceBadRequestException());
+        }
+
+        List<String> subQueries = new ArrayList<>();
+        Parameters params = Parameters.with("servicesIds", servicesIds);
+
+        if (state != null) {
+            subQueries.add("state = :state");
+            params.and("state", state);
+        }
+        if (deletionDate != null) {
+            subQueries.add("deletionDate = :deletionDate");
+            params.and("deletionDate", deletionDate);
+        }
+
+        String query = String.join(" AND ", subQueries);
+        return update(query + " WHERE id IN :servicesIds", params);
     }
 }

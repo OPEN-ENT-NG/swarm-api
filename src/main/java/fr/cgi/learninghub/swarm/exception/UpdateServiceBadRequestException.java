@@ -4,12 +4,12 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
 
-public class CreateServiceBadRequestException extends WebApplicationException {
+public class UpdateServiceBadRequestException extends WebApplicationException {
     static final Response DEFAULT_RESPONSE = Response.status(Response.Status.BAD_REQUEST)
-            .entity("Wrong values given to create the services")
+            .entity("Wrong values given to update the services")
             .build();
 
-    public CreateServiceBadRequestException() {
+    public UpdateServiceBadRequestException() {
         super(DEFAULT_RESPONSE);
     }
 

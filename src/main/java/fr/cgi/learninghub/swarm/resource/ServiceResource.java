@@ -3,9 +3,12 @@ package fr.cgi.learninghub.swarm.resource;
 import fr.cgi.learninghub.swarm.core.enums.Order;
 import fr.cgi.learning.hub.swarm.common.entities.Service;
 import fr.cgi.learning.hub.swarm.common.enums.Type;
+import fr.cgi.learning.hub.swarm.common.enums.State;
 import fr.cgi.learninghub.swarm.model.CreateServiceBody;
 import fr.cgi.learninghub.swarm.exception.CreateServiceBadRequestException;
+import fr.cgi.learninghub.swarm.exception.DeleteServiceBadRequestException;
 import fr.cgi.learninghub.swarm.model.ResponseListService;
+import fr.cgi.learninghub.swarm.model.UpdateServiceBody;
 import fr.cgi.learninghub.swarm.service.ServiceService;
 import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Uni;
@@ -65,12 +68,27 @@ public class ServiceResource {
 
     @POST
     @Transactional
-    @Operation(summary = "Create service", description = "Create a new service in the databse")
+    @Operation(summary = "Create service", description = "Create a new service in the database")
     @APIResponse(responseCode = "400", description = "Wrong values given for services to create")
     @APIResponse(responseCode = "204", description = "Service successfully created")
     public Uni<List<Service>> create(CreateServiceBody createServiceBody) {
         Date now = new Date();
         if (now.after(createServiceBody.getDeletionDate())) return Uni.createFrom().failure(new CreateServiceBadRequestException());
         return serviceService.create(createServiceBody);
+    }
+
+    @DELETE
+    @Operation(summary = "Delete service", description = "Delete a service in the database")
+    @APIResponse(responseCode = "200", description = "Service successfully deleted")
+    @APIResponse(responseCode = "400", description = "Wrong values given to delete services")
+    @APIResponse(responseCode = "500", description = "Internal server error")
+    public Uni<Integer> delete(UpdateServiceBody updateServiceBody) {
+        if (updateServiceBody == null || updateServiceBody.getServicesIds().isEmpty() ||
+            updateServiceBody.getDeletionDate() != null ||
+            updateServiceBody.getState() == null || updateServiceBody.getState() != State.DELETION_SCHEDULED) {
+            return Uni.createFrom().failure(new DeleteServiceBadRequestException());
+        }
+
+        return serviceService.delete(updateServiceBody);
     }
 }
