@@ -1,11 +1,15 @@
 package fr.cgi.learninghub.swarm.repository;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.jboss.logging.Logger;
+
 import fr.cgi.learninghub.swarm.core.enums.Order;
-import fr.cgi.learninghub.swarm.core.enums.Type;
-import fr.cgi.learninghub.swarm.entity.Service;
+import fr.cgi.learninghub.swarm.exception.CreateServiceException;
+import fr.cgi.learning.hub.swarm.common.enums.Type;
+import fr.cgi.learning.hub.swarm.common.entities.Service;
 import io.quarkus.hibernate.reactive.panache.PanacheRepositoryBase;
 import io.quarkus.hibernate.reactive.panache.common.WithSession;
 import io.quarkus.panache.common.Page;
@@ -14,11 +18,14 @@ import io.quarkus.panache.common.Sort;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 @WithSession
 @RegisterForReflection
 @ApplicationScoped
 public class ServiceRepository implements PanacheRepositoryBase<Service, String> {
+    
+    private static final Logger log = Logger.getLogger(ServiceRepository.class);
 
     public Uni<List<Service>> listAllWithFilterForCount(List<String> usersIds, String search, List<Type> types, Order order) {
         // Sorting params
@@ -75,9 +82,46 @@ public class ServiceRepository implements PanacheRepositoryBase<Service, String>
         return list(query, userIds);
     }
 
-    public Uni<Void> create(List<Service> services) {
-        return persist(services)
-            .chain(voidItem -> flush())
-            .replaceWithVoid();
+    @Transactional
+    public Uni<List<Service>> create(List<Service> services) {
+        Uni<List<Service>> sequence = Uni.createFrom().item(List.of()); // Final object we gonna fill
+
+        // We need to treat it sequentially to let database know that an object has been created and letting it created the next id
+        for (Service service : services) {
+            sequence = sequence
+                .chain(currentList -> {
+                    return persistAndFlush(service).onItem().transformToUni(persistedService -> {  // Persist the service
+                        List<Service> newCurrentList = new ArrayList<>(currentList);
+                        newCurrentList.add(persistedService);  // Add the service to the list
+    
+                        return Uni.createFrom().item(newCurrentList); // Return the updated list wich gonna replace the final object
+                    });
+                })
+                .onFailure().recoverWithUni(err -> {
+                    log.error(String.format("[SwarmApi@%s::updateService] Failed to create service in database : %s", this.getClass().getSimpleName(), err.getMessage()));
+                    return Uni.createFrom().failure(new CreateServiceException());
+                });
+        }
+
+        return sequence;
+    }
+
+    @Transactional
+    public Uni<Service> create(Service service) {
+        return persistAndFlush(service);
+    }
+
+    @Transactional
+    public Uni<List<Service>> patch(List<Service> services) {
+        List<Uni<Service>> unis = services.stream()
+                .map(service -> patch(service))
+                .toList();
+        return Uni.combine().all().unis(unis).with(list -> (List<Service>) list);
+    }
+
+    @Transactional
+    public Uni<Service> patch(Service service) {
+        Parameters params = Parameters.with("id", service.getId()).and("serviceName", service.getServiceName());
+        return update("serviceName = :serviceName where id = :id", params).replaceWith(service);
     }
 }

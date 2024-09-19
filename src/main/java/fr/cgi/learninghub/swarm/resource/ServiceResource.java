@@ -1,7 +1,8 @@
 package fr.cgi.learninghub.swarm.resource;
 
 import fr.cgi.learninghub.swarm.core.enums.Order;
-import fr.cgi.learninghub.swarm.core.enums.Type;
+import fr.cgi.learning.hub.swarm.common.entities.Service;
+import fr.cgi.learning.hub.swarm.common.enums.Type;
 import fr.cgi.learninghub.swarm.model.CreateServiceBody;
 import fr.cgi.learninghub.swarm.exception.CreateServiceBadRequestException;
 import fr.cgi.learninghub.swarm.model.ResponseListService;
@@ -67,7 +68,7 @@ public class ServiceResource {
     @Operation(summary = "Create service", description = "Create a new service in the databse")
     @APIResponse(responseCode = "400", description = "Wrong values given for services to create")
     @APIResponse(responseCode = "204", description = "Service successfully created")
-    public Uni<Void> create(CreateServiceBody createServiceBody) {
+    public Uni<List<Service>> create(CreateServiceBody createServiceBody) {
         Date now = new Date();
         if (now.after(createServiceBody.getDeletionDate())) return Uni.createFrom().failure(new CreateServiceBadRequestException());
         return serviceService.create(createServiceBody);

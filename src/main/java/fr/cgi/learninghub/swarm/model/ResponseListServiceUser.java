@@ -1,7 +1,7 @@
 package fr.cgi.learninghub.swarm.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import fr.cgi.learninghub.swarm.entity.Service;
+import fr.cgi.learning.hub.swarm.common.entities.Service;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.util.List;

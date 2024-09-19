@@ -2,7 +2,7 @@ package fr.cgi.learninghub.swarm.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import fr.cgi.learninghub.swarm.core.enums.Type;
+import fr.cgi.learning.hub.swarm.common.enums.Type;
 import java.util.Date;
 import java.util.List;
 

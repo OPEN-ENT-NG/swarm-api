@@ -22,6 +22,17 @@
     <sonar.qualitygate.wait>true</sonar.qualitygate.wait>
     <sonar.coverage.jacoco.xmlReportPaths>target/jacoco-report/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
   </properties>
+    
+  <repositories>
+    <repository>
+      <id>maven-releases</id>
+      <url>https://nexus-pic2.support-ent.fr/repository/maven-releases/</url>
+    </repository>
+    <repository>
+      <id>maven-snapshots</id>
+      <url>https://nexus-pic2.support-ent.fr/repository/maven-snapshots/</url>
+    </repository>
+  </repositories>
 
   <dependencyManagement>
     <dependencies>
@@ -108,6 +119,11 @@
       <artifactId>quarkus-test-security-oidc</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>fr.cgi.learning.hub.swarm</groupId>
+      <artifactId>common</artifactId>
+      <version>0.1-SNAPSHOT</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -190,4 +206,15 @@
       </properties>
     </profile>
   </profiles>
+
+  <distributionManagement>
+        <snapshotRepository>
+            <id>nexus-snapshots</id>
+            <url>https://nexus-pic2.support-ent.fr/repository/hub-snapshots/</url>
+        </snapshotRepository>
+        <repository>
+            <id>nexus-releases</id>
+            <url>https://nexus-pic2.support-ent.fr/repository/hub-releases/</url>
+        </repository>
+    </distributionManagement>
 </project>

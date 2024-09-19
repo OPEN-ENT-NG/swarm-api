@@ -18,7 +18,7 @@ import org.jboss.logging.Logger;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import fr.cgi.learninghub.swarm.entity.Service;
+import fr.cgi.learning.hub.swarm.common.entities.Service;
 import fr.cgi.learninghub.swarm.repository.ServiceRepository;
 
 

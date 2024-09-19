@@ -11,9 +11,9 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import fr.cgi.learninghub.swarm.core.enums.State;
-import fr.cgi.learninghub.swarm.core.enums.Type;
-import fr.cgi.learninghub.swarm.entity.Service;
+import fr.cgi.learning.hub.swarm.common.entities.Service;
+import fr.cgi.learning.hub.swarm.common.enums.State;
+import fr.cgi.learning.hub.swarm.common.enums.Type;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 

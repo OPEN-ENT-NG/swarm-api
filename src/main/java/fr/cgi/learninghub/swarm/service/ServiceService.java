@@ -1,12 +1,12 @@
 package fr.cgi.learninghub.swarm.service;
 
-import fr.cgi.learninghub.swarm.core.enums.PathType;
 import fr.cgi.learninghub.swarm.core.enums.Profile;
 import fr.cgi.learninghub.swarm.core.enums.Order;
-import fr.cgi.learninghub.swarm.core.enums.State;
-import fr.cgi.learninghub.swarm.core.enums.Type;
+import fr.cgi.learning.hub.swarm.common.enums.PathType;
+import fr.cgi.learning.hub.swarm.common.enums.State;
+import fr.cgi.learning.hub.swarm.common.enums.Type;
+import fr.cgi.learning.hub.swarm.common.entities.Service;
 import fr.cgi.learninghub.swarm.exception.CreateServiceException;
-import fr.cgi.learninghub.swarm.entity.Service;
 import fr.cgi.learninghub.swarm.exception.ENTGetStructuresException;
 import fr.cgi.learninghub.swarm.exception.ENTGetUsersInfosException;
 import fr.cgi.learninghub.swarm.exception.ListServiceException;
@@ -60,12 +60,16 @@ public class ServiceService {
             });
     }
 
-    public Uni<Void> create(CreateServiceBody createServiceBody) {
+    public Uni<List<Service>> create(CreateServiceBody createServiceBody) {
         return userService.getAllUsers(Profile.STUDENT)
             .chain(users -> Uni.createFrom().item(createServicesObjects(users, createServiceBody)))
-            .chain(this.serviceRepository::create)
+            .chain(serviceRepository::create)
+            .chain(services -> {
+                services.forEach(service -> service.setServiceName(service.getServiceName() + service.getId())); // complete serviceNames with ids
+                return serviceRepository.patch(services);
+            })
             .onFailure().recoverWithUni(err -> {
-                log.error(String.format("[SwarmApi@ServiceService::%s] Failed to create service in database : %s", this.getClass().getSimpleName(), err.getMessage()));
+                log.error(String.format("[SwarmApi@%s::create] Failed to create service in database : %s", this.getClass().getSimpleName(), err.getMessage()));
                 return Uni.createFrom().failure(new CreateServiceException());
             });
     }
@@ -125,12 +129,10 @@ public class ServiceService {
         filteredUsers.stream().forEach(user -> {
             types.stream().forEach(type -> {
                 Service service = new Service();
-                String id = UUID.randomUUID().toString(); // We generate it ourselves for serviceName (instead of letting it being auto)
-                service.setId(id)
-                    .setUserId(user.getId())
+                service.setUserId(user.getId())
                     .setFirstName(user.getFirstName())
                     .setLastName(user.getLastName())
-                    .setServiceName(String.format("/%s-%s", PathType.getValue(type), id))
+                    .setServiceName(String.format("/%s-", PathType.getValue(type))) // we don't have the id yet to complete serviceName properly
                     .setStructureId(user.getStructure())
                     .setType(type)
                     .setDeletionDate(createServiceBody.getDeletionDate())
