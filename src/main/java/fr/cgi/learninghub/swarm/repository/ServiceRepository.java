@@ -96,14 +96,14 @@ public class ServiceRepository implements PanacheRepositoryBase<Service, String>
 
                         return Uni.createFrom().item(newCurrentList); // Return the updated list wich gonna replace the final object
                     });
-                })
-                .onFailure().recoverWithUni(err -> {
-                    log.error(String.format("[SwarmApi@%s::updateService] Failed to create service in database : %s", this.getClass().getSimpleName(), err.getMessage()));
-                    return Uni.createFrom().failure(new CreateServiceException());
                 });
         }
 
-        return sequence;
+        return sequence
+            .onFailure().recoverWithUni(err -> {
+                log.error(String.format("[SwarmApi@%s::updateService] Failed to create services in database : %s", this.getClass().getSimpleName(), err.getMessage()));
+                return Uni.createFrom().failure(new CreateServiceException());
+            });
     }
 
     @Transactional
