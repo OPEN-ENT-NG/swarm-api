@@ -27,11 +27,7 @@ public class ServiceRepository implements PanacheRepositoryBase<Service, String>
     
     private static final Logger log = Logger.getLogger(ServiceRepository.class);
 
-    public Uni<List<Service>> listAllWithFilterForCount(List<String> usersIds, String search, List<Type> types, Order order) {
-        // Sorting params
-        Sort.Direction direction = order.getDirection();
-        Sort sorting = Sort.by("lastName", direction).and("firstName", direction);
-
+    public Uni<List<Service>> listAllWithFilter(List<String> usersIds, String search, List<Type> types) {
         // Init query filtered by users ids and service types
         String query = "SELECT DISTINCT s.userId, s.firstName, s.lastName FROM Service s " +
                 "WHERE s.userId IN :usersIds AND s.type IN :types ";
@@ -51,7 +47,7 @@ public class ServiceRepository implements PanacheRepositoryBase<Service, String>
         }
 
         query += "GROUP BY s.userId, s.firstName, s.lastName";
-        return Service.find(query, sorting, params).project(Service.class).list();
+        return Service.find(query, params).project(Service.class).list();
     }
 
     public Uni<List<Service>> listAllWithFilterAndLimit(List<String> usersIds, Order order, int page, int limit) {

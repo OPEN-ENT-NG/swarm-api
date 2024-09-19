@@ -14,6 +14,12 @@ public class StructureInfos {
     @JsonAlias("UAI")
     private String id;
 
+    @Schema(description = "Id (as externalId) of the structure",
+            example = "42",
+            required = true)
+    @JsonAlias("externalId")
+    private String externalId;
+
     @Schema(description = "Name of the structure",
             example = "Emile Zola",
             required = true)
@@ -26,6 +32,10 @@ public class StructureInfos {
         return id;
     }
 
+    public String getExternalId() {
+        return externalId;
+    }
+
     public String getName() {
         return name;
     }
@@ -34,6 +44,11 @@ public class StructureInfos {
 
     public StructureInfos setId(String id) {
         this.id = id;
+        return this;
+    }
+
+    public StructureInfos setExternalId(String externalId) {
+        this.externalId = externalId;
         return this;
     }
 

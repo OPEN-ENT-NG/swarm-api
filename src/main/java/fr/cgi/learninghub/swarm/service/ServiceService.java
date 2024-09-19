@@ -38,17 +38,18 @@ public class ServiceService {
         return userService.getConnectedUserInfos()
             .chain(userInfos -> userService.getUsersByUais(userInfos.getStructuresIds(), Profile.STUDENT)
                 .chain(students -> {
+                    List<User> filteredStudents = students;
                     if (structures != null && !structures.isEmpty()) {
-                        students = students.stream().filter(student -> structures.contains(student.getStructure())).toList();
+                        filteredStudents = filteredStudents.stream().filter(student -> structures.contains(student.getStructure())).toList();
                     }
                     if (classes != null && !classes.isEmpty()) {
-                        students = students.stream().filter(student -> classes.stream().anyMatch(student.getClassIds()::contains)).toList();
+                        filteredStudents = filteredStudents.stream().filter(student -> classes.stream().anyMatch(student.getClassIds()::contains)).toList();
                     }
 //                if (groups != null && !groups.isEmpty()) {
-//                    students = students.stream().filter(student -> groups.stream().anyMatch(student.getGroupIds()::contains)).toList();
+//                    filteredStudents = filteredStudents.stream().filter(student -> groups.stream().anyMatch(student.getGroupIds()::contains)).toList();
 //                }
-                    List<String> usersIds = students.stream().map(User::getId).toList();
-                    return getServicesFromFilteredUsers(search, types, order, page, limit, usersIds, students, userInfos);
+
+                    return getServicesFromFilteredUsers(search, types, order, page, limit, students, filteredStudents, userInfos);
                 })
                 .onFailure().recoverWithUni(err -> {
                     log.error(String.format("[SwarmApi@%s::listAllAndFilter] Failed to list users for UAIs %s : %s", this.getClass().getSimpleName(), userInfos.getStructuresIds(), err.getMessage()));
@@ -77,12 +78,21 @@ public class ServiceService {
     // Utils
 
     private Uni<ResponseListService> getServicesFromFilteredUsers(String search, List<Type> types, Order order, int page, int limit,
-                                    List<String> usersIds, List<User> students, UserInfos userInfos) {
-        return this.serviceRepository.listAllWithFilterForCount(usersIds, search, types, order)
-            .chain(servicesForCount -> {
-                List<String> finalUsersIds = servicesForCount.stream().map(Service::getUserId).distinct().toList();
+                                                                    List<User> students, List<User> filteredStudents, UserInfos userInfos) {
+        List<String> usersIds = filteredStudents.stream().map(User::getId).toList();
+
+        return this.serviceRepository.listAllWithFilter(usersIds, search, types)
+            .chain(services -> {
+                // Calculate total users
+                List<String> finalUsersIds = services.stream().map(Service::getUserId).distinct().toList();
                 int totalUsers = finalUsersIds.size();
-                return buildResponseListService(order, page, limit, finalUsersIds, students, userInfos, totalUsers);
+
+                return setResponseListServiceGlobalInfos(students, userInfos, totalUsers)
+                    .chain(responseListServiceGlobalInfos -> buildResponseListService(order, page, limit, finalUsersIds, filteredStudents, userInfos, responseListServiceGlobalInfos))
+                    .onFailure().recoverWithUni(err -> {
+                        log.error(String.format("[SwarmApi@%s::getServicesFromFilteredUsers] Failed to create responseListServiceGlobalInfos : %s", this.getClass().getSimpleName(), err.getMessage()));
+                        return Uni.createFrom().failure(new ListServiceException());
+                    });
             })
             .onFailure().recoverWithUni(err -> {
                 log.error(String.format("[SwarmApi@%s::getServicesFromFilteredUsers] Failed to filter userIds from database : %s", this.getClass().getSimpleName(), err.getMessage()));
@@ -90,13 +100,14 @@ public class ServiceService {
             });
     }
 
-    private Uni<ResponseListService> buildResponseListService(Order order, int page, int limit, List<String> usersIds, List<User> students, UserInfos userInfos, int totalUsers) {
+    private Uni<ResponseListService> buildResponseListService(Order order, int page, int limit, List<String> usersIds, List<User> filteredStudents,
+                                                            UserInfos userInfos, ResponseListServiceGlobalInfos responseListServiceGlobalInfos) {
         return this.serviceRepository.listAllWithFilterAndLimit(usersIds, order, page, limit)
             .chain(services -> {
                 List<ResponseListServiceUser> users = new ArrayList<>();
                 usersIds.forEach(userId -> {
                     List<Service> userServices = services.stream().filter(service -> service.getUserId().equals(userId)).toList();
-                    List<ClassInfos> userClasses = students.stream()
+                    List<ClassInfos> userClasses = filteredStudents.stream()
                             .filter(student -> student.getId().equals(userId))
                             .findFirst()
                             .map(User::getClasses)
@@ -110,8 +121,8 @@ public class ServiceService {
                 });
 
                 ResponseListService responseListService = new ResponseListService()
-                        .setTotalUsers((long) totalUsers)
-                        .setUsers(users);
+                        .setGlobalInfos(responseListServiceGlobalInfos)
+                        .setFilteredUsers(users);
 
                 return Uni.createFrom().item(responseListService);
             })
@@ -153,5 +164,50 @@ public class ServiceService {
                 return createServiceBody.getUsersIds().contains(user.getId()) ||
                         createServiceBody.getClassesIds().stream().anyMatch(classesIds::contains);
             }).toList();
+    }
+
+    private Uni<ResponseListServiceGlobalInfos> setResponseListServiceGlobalInfos(List<User> students, UserInfos userInfos, int totalUsers) {
+        return serviceRepository.listAll()
+            .chain(allServices -> {
+                List<String> allServicesIds = allServices.stream().map(Service::getUserId).toList();
+                List<User> finalStudents = students.stream().filter(student -> allServicesIds.contains(student.getId())).toList();
+
+                // Find all structures for filtered users
+                List<String> structuresInfosIds = finalStudents.stream().map(User::getStructure).distinct().toList();
+                List<StructureInfos> structuresInfos = userInfos.getStructures().stream().filter(s -> structuresInfosIds.contains(s.getExternalId())).distinct().toList();
+                
+                // Find all classes infos for filtered users
+                List<ClassInfos> classesInfos = new ArrayList<>();
+                Set<String> seenIds = new HashSet<>();
+                finalStudents.stream()
+                    .map(User::getClasses)
+                    .flatMap(List::stream)
+                    .filter(classInfo -> seenIds.add(classInfo.getId())) // keep objects only once thanks to the 'add' to the Set returning false if the id alreadyexists
+                    .forEach(classInfo -> classesInfos.add(classInfo));
+
+                // Find all groups infos for filtered users
+                // List<ClassInfos> groupsInfos = new ArrayList<>();
+                
+                // Find all user infos for filtered users
+                List<UserInfos> usersInfos = finalStudents.stream()
+                    .map(student -> {
+                        return new UserInfos()
+                            .setId(student.getId())
+                            .setFirstName(student.getFirstName())
+                            .setLastName(student.getLastName());
+                    }).toList();
+
+                ResponseListServiceGlobalInfos responseListServiceGlobalInfos = new ResponseListServiceGlobalInfos()
+                        .setTotalUsers((long)totalUsers)
+                        .setStructures(structuresInfos)
+                        .setClasses(classesInfos)
+                        .setUsers(usersInfos);
+
+                return Uni.createFrom().item(responseListServiceGlobalInfos);
+            })
+            .onFailure().recoverWithUni(err -> {
+                log.error(String.format("[SwarmApi@%s::setResponseListServiceGlobalInfos] Failed to list all services from database : %s", this.getClass().getSimpleName(), err.getMessage()));
+                return Uni.createFrom().failure(new ListServiceException());
+            });
     }
 }

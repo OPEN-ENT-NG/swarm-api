@@ -16,7 +16,7 @@ public class ResponseListUser {
     private List<User> users;
 
     @Schema(description = "List of classes  in the response",
-            example = "[{\"id\": \"e1ef8cb4-d7dc-4c9d-9b98-8c0270cfac0b\", \"name\": \"1TES2\"}]",
+            example = "[{\"id\": \"42$1TES 2\", \"name\": \"1TES 2\"}]",
             required = true)
     @JsonProperty("classes")
     private List<ClassInfos> classes;

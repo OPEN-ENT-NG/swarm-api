@@ -7,29 +7,29 @@ import java.util.List;
 @Schema(description = "ResponseListService object representing the response to the route list()")
 public class ResponseListService {
 
-    private Long totalUsers;
+    private ResponseListServiceGlobalInfos globalInfos;
 
-    private List<ResponseListServiceUser> users;
+    private List<ResponseListServiceUser> filteredUsers;
 
     // Getter
 
-    public Long getTotalUsers() {
-        return totalUsers;
+    public ResponseListServiceGlobalInfos getGlobalInfos() {
+        return globalInfos;
     }
 
-    public List<ResponseListServiceUser> getUsers() {
-        return users;
+    public List<ResponseListServiceUser> getFilteredUsers() {
+        return filteredUsers;
     }
 
     // Setter
 
-    public ResponseListService setTotalUsers(Long totalUsers) {
-        this.totalUsers = totalUsers;
+    public ResponseListService setGlobalInfos(ResponseListServiceGlobalInfos globalInfos) {
+        this.globalInfos = globalInfos;
         return this;
     }
 
-    public ResponseListService setUsers(List<ResponseListServiceUser> users) {
-        this.users = users;
+    public ResponseListService setFilteredUsers(List<ResponseListServiceUser> filteredUsers) {
+        this.filteredUsers = filteredUsers;
         return this;
     }
 }
