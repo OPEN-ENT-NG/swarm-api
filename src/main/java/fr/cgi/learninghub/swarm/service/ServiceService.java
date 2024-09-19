@@ -89,14 +89,15 @@ public class ServiceService {
     private Uni<ResponseListService> getServicesFromFilteredUsers(String search, List<Type> types, Order order, int page, int limit,
                                                                     List<User> students, List<User> filteredStudents, UserInfos userInfos) {
         List<String> usersIds = filteredStudents.stream().map(User::getId).toList();
+        List<State> hiddenStates = Arrays.asList(State.DEPLOYMENT_IN_ERROR, State.DELETION_SCHEDULED, State.DELETION_IN_PROGRESS, State.DELETION_IN_ERROR, State.RESET_IN_ERROR);
 
-        return serviceRepository.listAllWithFilter(usersIds, search, types)
+        return serviceRepository.listAllWithFilter(usersIds, search, types, hiddenStates)
             .chain(services -> {
                 // Calculate total users
                 List<String> finalUsersIds = services.stream().map(Service::getUserId).distinct().toList();
                 int totalUsers = finalUsersIds.size();
 
-                return setResponseListServiceGlobalInfos(students, userInfos, totalUsers)
+                return setResponseListServiceGlobalInfos(students, userInfos, totalUsers, hiddenStates)
                     .chain(responseListServiceGlobalInfos -> buildResponseListService(order, page, limit, finalUsersIds, filteredStudents, userInfos, responseListServiceGlobalInfos))
                     .onFailure().recoverWithUni(err -> {
                         log.error(String.format("[SwarmApi@%s::getServicesFromFilteredUsers] Failed to create responseListServiceGlobalInfos : %s", this.getClass().getSimpleName(), err.getMessage()));
@@ -175,9 +176,10 @@ public class ServiceService {
             }).toList();
     }
 
-    private Uni<ResponseListServiceGlobalInfos> setResponseListServiceGlobalInfos(List<User> students, UserInfos userInfos, int totalUsers) {
+    private Uni<ResponseListServiceGlobalInfos> setResponseListServiceGlobalInfos(List<User> students, UserInfos userInfos, int totalUsers, List<State> hiddenStates) {
         return serviceRepository.listAll()
             .chain(allServices -> {
+                allServices = allServices.stream().filter(service -> !hiddenStates.contains(service.getState())).toList();
                 List<String> allServicesIds = allServices.stream().map(Service::getUserId).toList();
                 List<User> finalStudents = students.stream().filter(student -> allServicesIds.contains(student.getId())).toList();
 

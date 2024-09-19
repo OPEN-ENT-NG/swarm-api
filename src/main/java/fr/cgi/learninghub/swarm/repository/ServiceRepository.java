@@ -9,19 +9,15 @@ import fr.cgi.learninghub.swarm.exception.UpdateServiceBadRequestException;
 import fr.cgi.learninghub.swarm.model.UpdateServiceBody;
 import io.quarkus.hibernate.reactive.panache.PanacheRepositoryBase;
 import io.quarkus.panache.common.Parameters;
-import jakarta.ws.rs.NotFoundException;
 import org.jboss.logging.Logger;
 
 import fr.cgi.learninghub.swarm.core.enums.Order;
 import fr.cgi.learninghub.swarm.exception.CreateServiceException;
 import fr.cgi.learning.hub.swarm.common.enums.Type;
-import fr.cgi.learning.hub.swarm.common.enums.PathType;
 import fr.cgi.learning.hub.swarm.common.enums.State;
 import fr.cgi.learning.hub.swarm.common.entities.Service;
-import io.quarkus.hibernate.reactive.panache.PanacheRepositoryBase;
 import io.quarkus.hibernate.reactive.panache.common.WithSession;
 import io.quarkus.panache.common.Page;
-import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import io.smallrye.mutiny.Uni;
@@ -35,11 +31,11 @@ public class ServiceRepository implements PanacheRepositoryBase<Service, String>
 
     private static final Logger log = Logger.getLogger(ServiceRepository.class);
 
-    public Uni<List<Service>> listAllWithFilter(List<String> usersIds, String search, List<Type> types) {
+    public Uni<List<Service>> listAllWithFilter(List<String> usersIds, String search, List<Type> types, List<State> hiddenStates) {
         // Init query filtered by users ids and service types
         String query = "SELECT DISTINCT s.userId, s.firstName, s.lastName FROM Service s " +
-                "WHERE s.userId IN :usersIds AND s.type IN :types ";
-        Parameters params = Parameters.with("usersIds", usersIds).and("types", types);
+                "WHERE s.userId IN :usersIds AND s.type IN :types AND state NOT IN :hiddenStates ";
+        Parameters params = Parameters.with("usersIds", usersIds).and("types", types).and("hiddenStates", hiddenStates);
 
         // Search keywords in firstName and lastName columns
         if (!search.isEmpty()) {
