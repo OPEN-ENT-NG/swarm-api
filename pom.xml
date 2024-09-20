@@ -22,14 +22,14 @@
     <sonar.qualitygate.wait>true</sonar.qualitygate.wait>
     <sonar.coverage.jacoco.xmlReportPaths>target/jacoco-report/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
   </properties>
-    
+
   <repositories>
     <repository>
-      <id>maven-releases</id>
+      <id>nexus-releases</id>
       <url>https://nexus-pic2.support-ent.fr/repository/maven-releases/</url>
     </repository>
     <repository>
-      <id>maven-snapshots</id>
+      <id>nexus-snapshots</id>
       <url>https://nexus-pic2.support-ent.fr/repository/maven-snapshots/</url>
     </repository>
   </repositories>
@@ -208,13 +208,13 @@
   </profiles>
 
   <distributionManagement>
-        <snapshotRepository>
-            <id>nexus-snapshots</id>
-            <url>https://nexus-pic2.support-ent.fr/repository/hub-snapshots/</url>
-        </snapshotRepository>
-        <repository>
-            <id>nexus-releases</id>
-            <url>https://nexus-pic2.support-ent.fr/repository/hub-releases/</url>
-        </repository>
-    </distributionManagement>
+    <snapshotRepository>
+      <id>nexus-snapshots</id>
+      <url>https://nexus-pic2.support-ent.fr/repository/hub-snapshots/</url>
+    </snapshotRepository>
+    <repository>
+      <id>nexus-releases</id>
+      <url>https://nexus-pic2.support-ent.fr/repository/hub-releases/</url>
+    </repository>
+  </distributionManagement>
 </project>
