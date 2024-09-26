@@ -1,2 +1,42 @@
+stages: [check, package, test, build, deploy]
+
 include:
-  - component: $CI_SERVER_FQDN/devops/cicd/gitlab-ci-toolkit/quarkus-default-ci@1.7.0
+  - component: $CI_SERVER_FQDN/devops/cicd/gitlab-ci-toolkit/quarkus-sonarqube-analysis@1.9.3
+    inputs:
+      stage: check
+  - component: $CI_SERVER_FQDN/devops/cicd/gitlab-ci-toolkit/quarkus-native-build@1.9.3
+    inputs:
+      stage: package
+      dependencies:
+        - quarkus-sonarqube-analysis
+  - component: $CI_SERVER_FQDN/devops/cicd/gitlab-ci-toolkit/quarkus-unit-tests@1.9.3
+    inputs:
+      stage: test
+  - component: $CI_SERVER_FQDN/devops/cicd/gitlab-ci-toolkit/quarkus-native-integration-tests@1.9.3
+    inputs:
+      stage: test
+      dependencies:
+        - quarkus-native-build
+  - component: $CI_SERVER_FQDN/devops/cicd/gitlab-ci-toolkit/quarkus-build-docker-image@1.9.3
+    inputs:
+      stage: build
+      artifacts:
+        - "target/kubernetes"
+      dependencies:
+        - quarkus-native-build
+        - quarkus-unit-tests
+        - quarkus-native-integration-tests
+
+deploy:
+  image:
+    name: bitnami/kubectl:1.30.2
+    entrypoint: [ '' ]
+  stage: deploy
+  needs:
+    - quarkus-build-docker-image
+  only:
+    - dev
+  before_script:
+    - echo "$KUBE_CONFIG_DEV" | base64 -d > kubeconfig
+  script:
+    - kubectl --kubeconfig kubeconfig rollout restart deployment.apps/swarm-api -n swarm-dev

@@ -8,6 +8,35 @@ If you want to learn more about Quarkus, please visit its website: https://quark
 * OpenJDK 21+
 * Docker version 20+ (24.0.0 if possible)
 
+### Service requirements
+
+* Springboard
+  * Connector ENT to communicate with ENT API
+  * potentially need to adjust `app` properties in `application.properties` to match your Springboard configuration
+
+## Configuration settings.xml
+
+Pour pouvoir utiliser le repository privé de CGI learning hub, il faut ajouter le fichier `settings.xml` dans le dossier `.m2` de votre répertoire utilisateur.
+
+```xml
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                  http://maven.apache.org/xsd/settings-1.0.0.xsd">                                                                                   <servers>
+    <server>
+        <id>nexus-snapshots</id>
+        <username>${NEXUS_USERNAME}</username>
+        <password>${NEXUS_PASSWD}</password>                                                                                                         </server>
+    <server>
+        <id>nexus-releases</id>
+        <username>${NEXUS_USERNAME}</username>
+        <password>${NEXUS_PASSWD}</password>
+    </server>                                                                                                                                    </servers>
+</settings>                                                                                                                                                     
+```
+
+Remplacer les variables `${NEXUS_USERNAME}` et `${NEXUS_PASSWD}` par vos identifiants de connexion.
+
 ## Running the application in dev mode
 
 You can run your application in dev mode that enables live coding using:
@@ -30,9 +59,14 @@ If you want to log out you must clear the cookies and do :
 
 ### Use ENT API
 
+Un Springboard local est nécessaire pour utiliser l'API ENT.
+
+Vous pouvez utiliser le Springboard local pour créer un connecteur en suivant les instructions sur le lien suivant :
 - [Consume ENT API](docs/ent-auth-api/ent-auth-api.md)
 
 ### Provisioning user ENT with keycloak
+
+Simulation utilisateur ENT dans le keycloak ici :
 
 - [Provisioning User ENT](docs/user-provisioning/user-provisioning.md)
 
@@ -44,6 +78,12 @@ If you want to log out you must clear the cookies and do :
 admin // admin
 
 # authent user
+e77e6d72-c7c1-4f51-ba1d-dbaa81abec9d // password
+
+# si vous utiliez d'autres utilisateurs ENT,
+# créer votre propre user en prenant l'user id de l'ENT en username
+
+# obsolète 
 user.dev // password
 ```
 

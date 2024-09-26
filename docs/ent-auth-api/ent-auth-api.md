@@ -23,3 +23,18 @@ org.entcore.directory.controllers.GroupController|getGroup
 
 ![connector](/docs/ent-auth-api/assets/connector2.png)
 
+Ajouter le client et secret dans `application.properties`
+
+```
+app.rest-client.ent-client.username=<nom identifiant>
+app.rest-client.ent-client.password=<passwordSecret>
+```
+
+la propriété `app.classaafids` contient la liste des classes dans laquelle on souhaite faire le filtre.
+
+```
+http://localhost:8090/directory/class/admin/list?structureId=<structureId>
+```
+
+pour récupérer l'externalId de la classe
+exemple : `3A` correspond à l'externalId `3485$3A`
