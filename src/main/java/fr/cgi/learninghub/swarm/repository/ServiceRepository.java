@@ -85,26 +85,38 @@ public class ServiceRepository implements PanacheRepositoryBase<Service, String>
     @Transactional
     public Uni<List<Service>> create(List<Service> services) {
         Uni<List<Service>> sequence = Uni.createFrom().item(List.of()); // Final object we gonna fill
-
+        // WIP: TODO REFACTOR
         // We need to treat it sequentially to let database know that an object has been created and letting it created the next id
         for (Service service : services) {
             sequence = sequence
-                .chain(currentList -> {
-                    return persistAndFlush(service).onItem().transformToUni(persistedService -> {  // Persist the service
-                        List<Service> newCurrentList = new ArrayList<>(currentList);
-                        newCurrentList.add(persistedService);  // Add the service to the list
+                    .chain(currentList -> serviceExists(service).flatMap(exists -> {
+                        if (exists) {
+                            return Uni.createFrom().item(currentList); // Skip if service already exists
+                        } else {
+                            return persistAndFlush(service).onItem().transformToUni(persistedService -> {  // Persist the service
+                                List<Service> newCurrentList = new ArrayList<>(currentList);
+                                newCurrentList.add(persistedService);  // Add the service to the list
 
-                        return Uni.createFrom().item(newCurrentList); // Return the updated list wich gonna replace the final object
-                    });
-                });
+                                return Uni.createFrom().item(newCurrentList); // Return the updated list which gonna replace the final object
+                            });
+                        }
+                    }));
         }
 
         return sequence
-            .onFailure().recoverWithUni(err -> {
-                log.error(String.format("[SwarmApi@%s::updateService] Failed to create services in database : %s", this.getClass().getSimpleName(), err.getMessage()));
-                return Uni.createFrom().failure(new CreateServiceException());
-            });
+                .onFailure().recoverWithUni(err -> {
+                    log.error(String.format("[SwarmApi@%s::updateService] Failed to create services in database : %s", this.getClass().getSimpleName(), err.getMessage()));
+                    return Uni.createFrom().failure(new CreateServiceException());
+                });
     }
+
+    private Uni<Boolean> serviceExists(Service service) {
+        return Service.find("userId = ?1 and type = ?2", service.getUserId(), service.getType())
+                .count()
+                .map(count -> count > 0);
+    }
+
+
 
     @Transactional
     public Uni<Service> create(Service service) {
@@ -150,4 +162,38 @@ public class ServiceRepository implements PanacheRepositoryBase<Service, String>
         String query = String.join(" AND ", subQueries);
         return update(query + " WHERE id IN :servicesIds", params);
     }
+
+    public Uni<Integer> patchState(List<String> serviceIds, State state) {
+        String query = "state = :state WHERE id IN :serviceIds";
+        Parameters params = Parameters.with("state", state)
+                .and("serviceIds", serviceIds);
+
+        return update(query, params);
+    }
+
+    public Uni<Integer> update(List<String> serviceIds, Date deletionDate) {
+        String query = "deletionDate = :deletionDate WHERE id IN :serviceIds";
+        Parameters params = Parameters.with("deletionDate", deletionDate)
+                .and("serviceIds", serviceIds);
+
+        return update(query, params);
+    }
+
+    public Uni<Integer> delete(List<String> serviceIds) {
+        String query = "state = :state WHERE id IN :serviceIds";
+        Parameters params = Parameters.with("state", State.DELETION_SCHEDULED)
+                .and("serviceIds", serviceIds);
+
+        return update(query, params);
+    }
+
+    public Uni<Integer> reset(List<String> serviceIds, Date deletionDate) {
+        String query = "state = :state, deletionDate = :deletionDate WHERE id IN :serviceIds";
+        Parameters params = Parameters.with("state", State.RESET_IN_PROGRESS)
+                .and("deletionDate", deletionDate)
+                .and("serviceIds", serviceIds);
+
+        return update(query, params);
+    }
+
 }

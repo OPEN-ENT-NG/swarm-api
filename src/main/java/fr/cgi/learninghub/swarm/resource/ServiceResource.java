@@ -1,12 +1,11 @@
 package fr.cgi.learninghub.swarm.resource;
 
-import fr.cgi.learninghub.swarm.core.enums.Order;
 import fr.cgi.learning.hub.swarm.common.entities.Service;
 import fr.cgi.learning.hub.swarm.common.enums.Type;
-import fr.cgi.learning.hub.swarm.common.enums.State;
-import fr.cgi.learninghub.swarm.model.CreateServiceBody;
+import fr.cgi.learninghub.swarm.core.enums.Order;
 import fr.cgi.learninghub.swarm.exception.CreateServiceBadRequestException;
-import fr.cgi.learninghub.swarm.exception.DeleteServiceBadRequestException;
+import fr.cgi.learninghub.swarm.model.CreateServiceBody;
+import fr.cgi.learninghub.swarm.model.DeleteServiceBody;
 import fr.cgi.learninghub.swarm.model.ResponseListService;
 import fr.cgi.learninghub.swarm.model.UpdateServiceBody;
 import fr.cgi.learninghub.swarm.service.ServiceService;
@@ -14,21 +13,21 @@ import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.openapi.annotations.OpenAPIDefinition;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.info.Info;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import org.jboss.logging.Logger;
 
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-
-import jakarta.ws.rs.core.Response;
-import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
-import org.eclipse.microprofile.openapi.annotations.OpenAPIDefinition;
-import org.eclipse.microprofile.openapi.annotations.Operation;
-import org.eclipse.microprofile.openapi.annotations.info.Info;
-import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
-import org.eclipse.microprofile.openapi.annotations.tags.Tag;
-import org.jboss.logging.Logger;
 
 @Path("/services")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -84,14 +83,8 @@ public class ServiceResource {
     @APIResponse(responseCode = "200", description = "Service successfully deleted")
     @APIResponse(responseCode = "400", description = "Wrong values given to delete services")
     @APIResponse(responseCode = "500", description = "Internal server error")
-    public Uni<Integer> delete(UpdateServiceBody updateServiceBody) {
-        if (updateServiceBody == null || updateServiceBody.getServicesIds().isEmpty() ||
-                updateServiceBody.getDeletionDate() != null ||
-                updateServiceBody.getState() == null || updateServiceBody.getState() != State.DELETION_SCHEDULED) {
-            return Uni.createFrom().failure(new DeleteServiceBadRequestException());
-        }
-
-        return serviceService.delete(updateServiceBody);
+    public Uni<Integer> delete(@Valid DeleteServiceBody deleteServiceBody) {
+        return serviceService.delete(deleteServiceBody);
     }
 
     @PUT
@@ -109,7 +102,7 @@ public class ServiceResource {
     @APIResponse(responseCode = "201", description = "Service successfully reset")
     @APIResponse(responseCode = "400", description = "Wrong values given to reset services")
     @APIResponse(responseCode = "500", description = "Internal server error")
-    public Response reset(UpdateServiceBody updateServiceBody) {
+    public Response reset(@Valid UpdateServiceBody updateServiceBody) {
         return Response.status(Response.Status.CREATED).build();
     }
 

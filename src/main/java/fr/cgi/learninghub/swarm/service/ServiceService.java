@@ -71,8 +71,8 @@ public class ServiceService {
                 });
     }
 
-    public Uni<Integer> delete(UpdateServiceBody updateServiceBody) {
-        return serviceRepository.patch(updateServiceBody)
+    public Uni<Integer> delete(DeleteServiceBody deleteServiceBody) {
+        return serviceRepository.delete(deleteServiceBody.getServicesIds())
                 .onFailure().recoverWithUni(err -> {
                     log.error(String.format("[SwarmApi@%s::delete] Failed to delete services in database : %s", this.getClass().getSimpleName(), err.getMessage()));
                     return Uni.createFrom().failure(new DeleteServiceException());
