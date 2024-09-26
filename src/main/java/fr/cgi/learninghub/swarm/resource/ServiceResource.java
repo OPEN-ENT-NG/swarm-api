@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.OpenAPIDefinition;
 import org.eclipse.microprofile.openapi.annotations.Operation;
@@ -35,11 +36,11 @@ import org.jboss.logging.Logger;
 @Authenticated
 @Tag(name = "ServiceResource", description = "This API is used to manage service entities")
 @OpenAPIDefinition(
-    info = @Info(
-        title = "ServiceResource API",
-        version = "1.0.0",
-        description = "This API is used to manage service entities"
-    )
+        info = @Info(
+                title = "ServiceResource API",
+                version = "1.0.0",
+                description = "This API is used to manage service entities"
+        )
 )
 public class ServiceResource {
 
@@ -50,16 +51,16 @@ public class ServiceResource {
 
     @GET
     public Uni<ResponseListService> list(@Parameter(description = "Filter structures") @QueryParam("structures") List<String> structures,
-                                          @Parameter(description = "Filter classes") @QueryParam("classes") List<String> classes,
-                                          @Parameter(description = "Filter groups") @QueryParam("groups") List<String> groups,
-                                          @Parameter(description = "Search keywords") @QueryParam("search") String search,
-                                          @Parameter(description = "Filter types of service") @QueryParam("types") List<Type> types,
-                                          @Parameter(description = "Names order of the results") @QueryParam("order") Order order,
-                                          @Parameter(description = "Number of the requested page") @QueryParam("page") Integer page,
-                                          @Parameter(description = "Number of element on the requested page") @QueryParam("limit") Integer limit) {
+                                         @Parameter(description = "Filter classes") @QueryParam("classes") List<String> classes,
+                                         @Parameter(description = "Filter groups") @QueryParam("groups") List<String> groups,
+                                         @Parameter(description = "Search keywords") @QueryParam("search") String search,
+                                         @Parameter(description = "Filter types of service") @QueryParam("types") List<Type> types,
+                                         @Parameter(description = "Names order of the results") @QueryParam("order") Order order,
+                                         @Parameter(description = "Number of the requested page") @QueryParam("page") Integer page,
+                                         @Parameter(description = "Number of element on the requested page") @QueryParam("limit") Integer limit) {
         if (search == null) search = "";
         if (types == null || types.isEmpty()) types = Arrays.asList(Type.PRESTASHOP, Type.WORDPRESS);
-        if (order == null ) order = Order.ASCENDANT;
+        if (order == null) order = Order.ASCENDANT;
         if (page == null || page < 1) page = 1;
         if (limit == null || limit < 1) limit = 25;
 
@@ -73,7 +74,8 @@ public class ServiceResource {
     @APIResponse(responseCode = "204", description = "Service successfully created")
     public Uni<List<Service>> create(CreateServiceBody createServiceBody) {
         Date now = new Date();
-        if (now.after(createServiceBody.getDeletionDate())) return Uni.createFrom().failure(new CreateServiceBadRequestException());
+        if (now.after(createServiceBody.getDeletionDate()))
+            return Uni.createFrom().failure(new CreateServiceBadRequestException());
         return serviceService.create(createServiceBody);
     }
 
@@ -84,11 +86,50 @@ public class ServiceResource {
     @APIResponse(responseCode = "500", description = "Internal server error")
     public Uni<Integer> delete(UpdateServiceBody updateServiceBody) {
         if (updateServiceBody == null || updateServiceBody.getServicesIds().isEmpty() ||
-            updateServiceBody.getDeletionDate() != null ||
-            updateServiceBody.getState() == null || updateServiceBody.getState() != State.DELETION_SCHEDULED) {
+                updateServiceBody.getDeletionDate() != null ||
+                updateServiceBody.getState() == null || updateServiceBody.getState() != State.DELETION_SCHEDULED) {
             return Uni.createFrom().failure(new DeleteServiceBadRequestException());
         }
 
         return serviceService.delete(updateServiceBody);
     }
+
+    @PUT
+    @Operation(summary = "Update service", description = "Update a service in the database")
+    @APIResponse(responseCode = "201", description = "Service successfully updated")
+    @APIResponse(responseCode = "400", description = "Wrong values given to update services")
+    @APIResponse(responseCode = "500", description = "Internal server error")
+    public Response update(UpdateServiceBody updateServiceBody) {
+        return Response.status(Response.Status.CREATED).build();
+    }
+
+    @PATCH
+    @Path("/reset")
+    @Operation(summary = "Reset service", description = "Reset a service in the database")
+    @APIResponse(responseCode = "201", description = "Service successfully reset")
+    @APIResponse(responseCode = "400", description = "Wrong values given to reset services")
+    @APIResponse(responseCode = "500", description = "Internal server error")
+    public Response reset(UpdateServiceBody updateServiceBody) {
+        return Response.status(Response.Status.CREATED).build();
+    }
+
+    @PATCH
+    @Operation(summary = "Patch status service", description = "Update a service status in the database")
+    @APIResponse(responseCode = "201", description = "Service status successfully updated")
+    @APIResponse(responseCode = "400", description = "Wrong values given to update services status")
+    @APIResponse(responseCode = "500", description = "Internal server error")
+    public Response patchStatus(UpdateServiceBody updateServiceBody) {
+        return Response.status(Response.Status.CREATED).build();
+    }
+
+    @POST
+    @Path("/emails")
+    @Operation(summary = "Distribute mails", description = "Distribute mails to users")
+    @APIResponse(responseCode = "201", description = "Mails successfully sent")
+    @APIResponse(responseCode = "400", description = "Wrong values given to send mails")
+    @APIResponse(responseCode = "500", description = "Internal server error")
+    public Response distributeMails(UpdateServiceBody updateServiceBody) {
+        return Response.status(Response.Status.CREATED).build();
+    }
+
 }
