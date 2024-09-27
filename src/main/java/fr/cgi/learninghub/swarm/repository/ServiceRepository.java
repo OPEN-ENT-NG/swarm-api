@@ -84,38 +84,37 @@ public class ServiceRepository implements PanacheRepositoryBase<Service, String>
 
     @Transactional
     public Uni<List<Service>> create(List<Service> services) {
-        Uni<List<Service>> sequence = Uni.createFrom().item(List.of()); // Final object we gonna fill
-        // WIP: TODO REFACTOR
-        // We need to treat it sequentially to let database know that an object has been created and letting it created the next id
+        Uni<List<Service>> sequence = Uni.createFrom().item(new ArrayList<>()); // Final object we gonna fill
+
         for (Service service : services) {
             sequence = sequence
-                    .chain(currentList -> serviceExists(service).flatMap(exists -> {
+                    .chain(currentList -> checkIfServiceExists(service).flatMap(exists -> {
                         if (exists) {
-                            return Uni.createFrom().item(currentList); // Skip if service already exists
+                            // Skip the existing service and return the current list
+                            return Uni.createFrom().item(currentList);
                         } else {
-                            return persistAndFlush(service).onItem().transformToUni(persistedService -> {  // Persist the service
+                            return persistAndFlush(service).onItem().transformToUni(persistedService -> {
                                 List<Service> newCurrentList = new ArrayList<>(currentList);
-                                newCurrentList.add(persistedService);  // Add the service to the list
-
-                                return Uni.createFrom().item(newCurrentList); // Return the updated list which gonna replace the final object
+                                newCurrentList.add(persistedService);
+                                return Uni.createFrom().item(newCurrentList);
                             });
                         }
-                    }));
+                    }).onItem().ifNull().continueWith(currentList)); // Ensure we continue with the current list if null
         }
 
         return sequence
+                .onItem().ifNull().continueWith(new ArrayList<>()) // Ensure we return an empty list if no services are added
                 .onFailure().recoverWithUni(err -> {
-                    log.error(String.format("[SwarmApi@%s::updateService] Failed to create services in database : %s", this.getClass().getSimpleName(), err.getMessage()));
+                    log.error(String.format("[SwarmApi@%s::create] Failed to create services in database : %s", this.getClass().getSimpleName(), err.getMessage()));
                     return Uni.createFrom().failure(new CreateServiceException());
                 });
     }
 
-    private Uni<Boolean> serviceExists(Service service) {
-        return Service.find("userId = ?1 and type = ?2", service.getUserId(), service.getType())
-                .count()
-                .map(count -> count > 0);
+    private Uni<Boolean> checkIfServiceExists(Service service) {
+        return Service.find("type = ?1 and userId = ?2", service.getType(), service.getUserId())
+                .firstResult()
+                .map(existingService -> existingService != null);
     }
-
 
 
     @Transactional
@@ -125,11 +124,17 @@ public class ServiceRepository implements PanacheRepositoryBase<Service, String>
 
     @Transactional
     public Uni<List<Service>> patchServiceName(List<Service> services) {
+        if (services.isEmpty()) {
+            return Uni.createFrom().item(List.of()); // Return an empty list if services is empty
+        }
+
         List<Uni<Service>> unis = services.stream()
-                .map(service -> patchServiceName(service))
+                .map(this::patchServiceName)
                 .toList();
+
         return Uni.combine().all().unis(unis).with(list -> (List<Service>) list);
     }
+
 
     @Transactional
     public Uni<Service> patchServiceName(Service service) {

@@ -124,7 +124,7 @@ public class UserEntService {
 
     public Uni<List<User>> getAllUsers(Profile profile) {
         return fetchMyUserInfo()
-            .chain(userInfos -> getUsersByUais(userInfos.getStructuresIds(), profile))
+            .chain(userInfos -> getUsersByUais(userInfos.getStructuresUais(), profile))
             .onFailure().recoverWithUni(err -> {
                 log.error(String.format("[SwarmApi@%s::getAllUsers] Failed to get structures of connected user : %s", this.getClass().getSimpleName(), err.getMessage()));
                 return Uni.createFrom().failure(new ENTGetStructuresException());
