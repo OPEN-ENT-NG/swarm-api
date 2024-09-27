@@ -89,7 +89,7 @@ public class ServiceResource {
     @APIResponse(responseCode = "201", description = "Service successfully updated")
     @APIResponse(responseCode = "400", description = "Wrong values given to update services")
     @APIResponse(responseCode = "500", description = "Internal server error")
-    public Uni<Integer> update(@Valid UpdateServiceBody updateServiceBody) {
+    public Uni<Void> update(@Valid List<UpdateServiceBody> updateServiceBody) {
         return serviceService.update(updateServiceBody);
     }
 

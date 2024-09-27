@@ -71,8 +71,15 @@ public class ServiceService {
                 });
     }
 
-    public Uni<Integer> update(UpdateServiceBody updateServiceBody) {
-        return serviceRepository.update(updateServiceBody.getServicesIds(), updateServiceBody.getDeletionDate())
+    public Uni<Void> update(List<UpdateServiceBody> updateServiceBodyList) {
+        Uni<Void> sequence = Uni.createFrom().voidItem();
+
+        for (UpdateServiceBody updateServiceBody : updateServiceBodyList) {
+            sequence = sequence.chain(() -> serviceRepository.update(updateServiceBody.getServicesIds(), updateServiceBody.getDeletionDate()))
+                    .replaceWithVoid();
+        }
+
+        return sequence
                 .onFailure().recoverWithUni(err -> {
                     log.error(String.format("[SwarmApi@%s::update] Failed to update services in database : %s", this.getClass().getSimpleName(), err.getMessage()));
                     return Uni.createFrom().failure(new DeleteServiceException());
