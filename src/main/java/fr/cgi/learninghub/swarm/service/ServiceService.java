@@ -25,14 +25,14 @@ public class ServiceService {
     ServiceRepository serviceRepository;
 
     @Inject
-    IUserService userService;
+    UserEntService userEntService;
 
     // Functions
 
     public Uni<ResponseListService> listAllAndFilter(List<String> structures, List<String> classes, List<String> groups,
                                                      String search, List<Type> types, Order order, int page, int limit) {
-        return userService.getConnectedUserInfos()
-                .chain(userInfos -> userService.getUsersByUais(userInfos.getStructuresIds(), Profile.STUDENT)
+        return userEntService.fetchMyUserInfo()
+                .chain(userInfos -> userEntService.getUsersByUais(userInfos.getStructuresIds(), Profile.STUDENT)
                         .chain(students -> {
                             List<User> filteredStudents = students;
                             if (structures != null && !structures.isEmpty()) {
@@ -58,7 +58,7 @@ public class ServiceService {
     }
 
     public Uni<List<Service>> create(CreateServiceBody createServiceBody) {
-        return userService.getAllUsers(Profile.STUDENT)
+        return userEntService.getAllUsers(Profile.STUDENT)
                 .chain(users -> Uni.createFrom().item(createServicesObjects(users, createServiceBody)))
                 .chain(serviceRepository::create)
                 .chain(services -> {

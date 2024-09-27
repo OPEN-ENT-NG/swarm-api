@@ -27,16 +27,24 @@ public class ResponseListUser {
     @JsonProperty("groups")
     private List<GroupInfos> groups;
 
-    public ResponseListUser(List<User> users, List<ClassInfos> classes, List<GroupInfos> groups) {
+    @Schema(description = "List of structures in the response",
+            example = "[{\"id\": \"0123456Z\", \"name\": \"Emile Zola\"}]",
+            required = true)
+    @JsonProperty("structures")
+    private List<StructureInfos> structures;
+
+    public ResponseListUser(List<User> users, List<ClassInfos> classes, List<GroupInfos> groups, List<StructureInfos> structures) {
         this.setUsers(users);
         this.setClasses(classes);
         this.setGroups(groups);
+        this.setStructures(structures);
     }
 
     public ResponseListUser() {
         this.users = new ArrayList<>();
         this.classes = new ArrayList<>();
         this.groups = new ArrayList<>();
+        this.structures = new ArrayList<>();
     }
 
     // Getter
@@ -53,6 +61,10 @@ public class ResponseListUser {
         return groups;
     }
 
+    public List<StructureInfos> getStructures() {
+        return structures;
+    }
+
     // Setter
 
     public ResponseListUser setUsers(List<User> users) {
@@ -67,6 +79,11 @@ public class ResponseListUser {
 
     public ResponseListUser setGroups(List<GroupInfos> groups) {
         this.groups = groups;
+        return this;
+    }
+
+    public ResponseListUser setStructures(List<StructureInfos> structures) {
+        this.structures = structures;
         return this;
     }
 }

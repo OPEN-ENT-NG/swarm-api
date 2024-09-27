@@ -8,10 +8,10 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 @Schema(description = "StructureInfos object representing a structure in the system")
 public class StructureInfos {
 
-    @Schema(description = "Id (as UAI) of the structure",
-            example = "0123456Z",
+    @Schema(description = "Id of the structure",
+            example = "3d3bba2b-7bba-4e0a-94af-c5d1b3332f77",
             required = true)
-    @JsonAlias("UAI")
+    @JsonAlias("id")
     private String id;
 
     @Schema(description = "Id (as externalId) of the structure",
@@ -26,6 +26,12 @@ public class StructureInfos {
     @JsonProperty("name")
     private String name;
 
+    @Schema(description = "UAI of the structure",
+            example = "0123456Z",
+            required = true)
+    @JsonAlias("UAI")
+    private String uai;
+
     // Getter
 
     public String getId() {
@@ -38,6 +44,10 @@ public class StructureInfos {
 
     public String getName() {
         return name;
+    }
+
+    public String getUai() {
+        return uai;
     }
 
     // Setter
@@ -54,6 +64,11 @@ public class StructureInfos {
 
     public StructureInfos setName(String name) {
         this.name = name;
+        return this;
+    }
+
+    public StructureInfos setUai(String uai) {
+        this.uai = uai;
         return this;
     }
 }

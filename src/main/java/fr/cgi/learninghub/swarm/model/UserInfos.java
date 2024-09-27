@@ -28,7 +28,7 @@ public class UserInfos {
     private String lastName;
 
     @Schema(description = "List of structures associated with the user",
-            example = "[{\"id\": \"0123456Z\", \"name\": \"Emile Zola\"}]",
+            example = "[{\"id\": \"d2fa72a7-4b7f-4202-813b-4437e342e34f\", \"uai\": \"0770002J\", \"name\": \"Emile Zola\", \"externalid\": \"3075\"}]",
             required = true)
     @JsonProperty("structureNodes")
     private List<StructureInfos> structures;
@@ -73,10 +73,15 @@ public class UserInfos {
         return this;
     }
 
-    // Functions
-
     @JsonIgnore
     public List<String> getStructuresIds() {
-        return this.structures.stream().map(structure -> structure.getId()).toList();
+        return this.structures.stream().map(StructureInfos::getId).toList();
     }
+
+    @JsonIgnore
+    public List<String> getStructuresUais() {
+        return this.structures.stream().map(StructureInfos::getUai).toList();
+    }
+
+
 }

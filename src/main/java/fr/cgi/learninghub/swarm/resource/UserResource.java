@@ -1,7 +1,7 @@
 package fr.cgi.learninghub.swarm.resource;
 
 import fr.cgi.learninghub.swarm.model.ResponseListUser;
-import fr.cgi.learninghub.swarm.service.IUserService;
+import fr.cgi.learninghub.swarm.service.UserEntService;
 import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
@@ -36,7 +36,7 @@ public class UserResource {
     private static final Logger log = Logger.getLogger(UserResource.class);
 
     @Inject
-    IUserService userService;
+    UserEntService userEntService;
 
     @GET
     @Operation(summary = "List users", description = "Get list of users available to the connected user")
@@ -45,6 +45,6 @@ public class UserResource {
                 content = @Content(mediaType = "application/json",
                 schema = @Schema(implementation = ResponseListUser.class, type = SchemaType.ARRAY)))
     public Uni<ResponseListUser> list() {
-        return userService.getAndFilterUsers();
+        return userEntService.listGlobalUsersInfo();
     }
 }

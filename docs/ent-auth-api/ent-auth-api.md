@@ -19,6 +19,8 @@ org.entcore.directory.controllers.UserController|listUserInStructuresByUAI
 org.entcore.directory.controllers.ClassController|get
 org.entcore.directory.controllers.ClassController|findUsers 
 org.entcore.directory.controllers.GroupController|getGroup
+org.entcore.directory.controllers.StructureController|listStructures
+org.entcore.directory.controllers.DirectoryController|classes
 ```
 
 ![connector](/docs/ent-auth-api/assets/connector2.png)
