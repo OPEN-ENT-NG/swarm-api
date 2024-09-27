@@ -4,10 +4,7 @@ import fr.cgi.learning.hub.swarm.common.entities.Service;
 import fr.cgi.learning.hub.swarm.common.enums.Type;
 import fr.cgi.learninghub.swarm.core.enums.Order;
 import fr.cgi.learninghub.swarm.exception.CreateServiceBadRequestException;
-import fr.cgi.learninghub.swarm.model.CreateServiceBody;
-import fr.cgi.learninghub.swarm.model.DeleteServiceBody;
-import fr.cgi.learninghub.swarm.model.ResponseListService;
-import fr.cgi.learninghub.swarm.model.UpdateServiceBody;
+import fr.cgi.learninghub.swarm.model.*;
 import fr.cgi.learninghub.swarm.service.ServiceService;
 import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Uni;
@@ -92,8 +89,8 @@ public class ServiceResource {
     @APIResponse(responseCode = "201", description = "Service successfully updated")
     @APIResponse(responseCode = "400", description = "Wrong values given to update services")
     @APIResponse(responseCode = "500", description = "Internal server error")
-    public Response update(UpdateServiceBody updateServiceBody) {
-        return Response.status(Response.Status.CREATED).build();
+    public Uni<Integer> update(@Valid UpdateServiceBody updateServiceBody) {
+        return serviceService.update(updateServiceBody);
     }
 
     @PATCH
@@ -102,8 +99,8 @@ public class ServiceResource {
     @APIResponse(responseCode = "201", description = "Service successfully reset")
     @APIResponse(responseCode = "400", description = "Wrong values given to reset services")
     @APIResponse(responseCode = "500", description = "Internal server error")
-    public Response reset(@Valid UpdateServiceBody updateServiceBody) {
-        return Response.status(Response.Status.CREATED).build();
+    public Uni<Integer> update(@Valid ResetServiceBody resetServiceBody) {
+        return serviceService.reset(resetServiceBody);
     }
 
     @PATCH
@@ -111,8 +108,8 @@ public class ServiceResource {
     @APIResponse(responseCode = "201", description = "Service status successfully updated")
     @APIResponse(responseCode = "400", description = "Wrong values given to update services status")
     @APIResponse(responseCode = "500", description = "Internal server error")
-    public Response patchStatus(UpdateServiceBody updateServiceBody) {
-        return Response.status(Response.Status.CREATED).build();
+    public Uni<Integer> patchStatus(@Valid PatchStateServiceBody patchStateServiceBody) {
+        return serviceService.patchState(patchStateServiceBody);
     }
 
     @POST

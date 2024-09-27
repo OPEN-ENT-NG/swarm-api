@@ -71,6 +71,30 @@ public class ServiceService {
                 });
     }
 
+    public Uni<Integer> update(UpdateServiceBody updateServiceBody) {
+        return serviceRepository.update(updateServiceBody.getServicesIds(), updateServiceBody.getDeletionDate())
+                .onFailure().recoverWithUni(err -> {
+                    log.error(String.format("[SwarmApi@%s::update] Failed to update services in database : %s", this.getClass().getSimpleName(), err.getMessage()));
+                    return Uni.createFrom().failure(new DeleteServiceException());
+                });
+    }
+
+    public Uni<Integer> reset(ResetServiceBody resetServiceBody) {
+        return serviceRepository.reset(resetServiceBody.getServicesIds(), resetServiceBody.getDeletionDate())
+                .onFailure().recoverWithUni(err -> {
+                    log.error(String.format("[SwarmApi@%s::update] Failed to update services in database : %s", this.getClass().getSimpleName(), err.getMessage()));
+                    return Uni.createFrom().failure(new DeleteServiceException());
+                });
+    }
+
+    public Uni<Integer> patchState(PatchStateServiceBody patchStateServiceBody) {
+        return serviceRepository.patchState(patchStateServiceBody.getServicesIds(), patchStateServiceBody.getState())
+                .onFailure().recoverWithUni(err -> {
+                    log.error(String.format("[SwarmApi@%s::update] Failed to update services in database : %s", this.getClass().getSimpleName(), err.getMessage()));
+                    return Uni.createFrom().failure(new DeleteServiceException());
+                });
+    }
+
     public Uni<Integer> delete(DeleteServiceBody deleteServiceBody) {
         return serviceRepository.delete(deleteServiceBody.getServicesIds())
                 .onFailure().recoverWithUni(err -> {

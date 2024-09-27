@@ -138,7 +138,7 @@ public class ServiceRepository implements PanacheRepositoryBase<Service, String>
     }
 
     @Transactional
-    public Uni<Integer> patch(UpdateServiceBody updateServiceBody) {
+/*    public Uni<Integer> patch(UpdateServiceBody updateServiceBody) {
         List<String> servicesIds = updateServiceBody.getServicesIds();
         State state = updateServiceBody.getState();
         Date deletionDate = updateServiceBody.getDeletionDate();
@@ -161,7 +161,7 @@ public class ServiceRepository implements PanacheRepositoryBase<Service, String>
 
         String query = String.join(" AND ", subQueries);
         return update(query + " WHERE id IN :servicesIds", params);
-    }
+    }*/
 
     public Uni<Integer> patchState(List<String> serviceIds, State state) {
         String query = "state = :state WHERE id IN :serviceIds";

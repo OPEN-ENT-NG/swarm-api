@@ -3,6 +3,8 @@ package fr.cgi.learninghub.swarm.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import fr.cgi.learning.hub.swarm.common.enums.Type;
+import jakarta.validation.constraints.Future;
+
 import java.util.Date;
 import java.util.List;
 
@@ -12,6 +14,7 @@ public class CreateServiceBody {
     private List<Type> types;
 
     @JsonProperty("deletion_date")
+    @Future
     private Date deletionDate;
 
     @JsonProperty("users")

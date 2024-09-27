@@ -8,7 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
 
-public class UpdateServiceBody {
+public class ResetServiceBody {
 
 
     @JsonProperty("services_ids")
@@ -34,12 +34,12 @@ public class UpdateServiceBody {
 
     // Setter
 
-    public UpdateServiceBody setServicesIds(List<String> servicesIds) {
+    public ResetServiceBody setServicesIds(List<String> servicesIds) {
         this.servicesIds = servicesIds;
         return this;
     }
 
-    public UpdateServiceBody setDeletionDate(Date deletionDate) {
+    public ResetServiceBody setDeletionDate(Date deletionDate) {
         this.deletionDate = deletionDate;
         return this;
     }

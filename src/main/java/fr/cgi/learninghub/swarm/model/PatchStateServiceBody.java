@@ -1,14 +1,15 @@
 package fr.cgi.learninghub.swarm.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import fr.cgi.learning.hub.swarm.common.enums.State;
 import jakarta.validation.constraints.Future;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotEmpty;
 
 import java.util.Date;
 import java.util.List;
 
-public class UpdateServiceBody {
+public class PatchStateServiceBody {
 
 
     @JsonProperty("services_ids")
@@ -21,6 +22,10 @@ public class UpdateServiceBody {
     @Future
     private Date deletionDate;
 
+    @JsonProperty("state")
+    @NotNull
+    private State state;
+
     // Getter
 
     public List<String> getServicesIds() {
@@ -31,17 +36,24 @@ public class UpdateServiceBody {
         return deletionDate;
     }
 
+    public State getState() {
+        return state;
+    }
 
     // Setter
 
-    public UpdateServiceBody setServicesIds(List<String> servicesIds) {
+    public PatchStateServiceBody setServicesIds(List<String> servicesIds) {
         this.servicesIds = servicesIds;
         return this;
     }
 
-    public UpdateServiceBody setDeletionDate(Date deletionDate) {
+    public PatchStateServiceBody setDeletionDate(Date deletionDate) {
         this.deletionDate = deletionDate;
         return this;
     }
 
+    public PatchStateServiceBody setState(State state) {
+        this.state = state;
+        return this;
+    }
 }
