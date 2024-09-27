@@ -32,7 +32,7 @@ public class ServiceService {
     public Uni<ResponseListService> listAllAndFilter(List<String> structures, List<String> classes, List<String> groups,
                                                      String search, List<Type> types, Order order, int page, int limit) {
         return userEntService.fetchMyUserInfo()
-                .chain(userInfos -> userEntService.getUsersByUais(userInfos.getStructuresIds(), Profile.STUDENT)
+                .chain(userInfos -> userEntService.getUsersByUais(userInfos.getStructuresUais(), Profile.STUDENT)
                         .chain(students -> {
                             List<User> filteredStudents = students;
                             if (structures != null && !structures.isEmpty()) {
