@@ -17,11 +17,6 @@ public class PatchStateServiceBody {
     @NotEmpty
     private List<String> servicesIds;
 
-    @JsonProperty("deletion_date")
-    @NotNull
-    @Future
-    private Date deletionDate;
-
     @JsonProperty("state")
     @NotNull
     private State state;
@@ -32,10 +27,6 @@ public class PatchStateServiceBody {
         return servicesIds;
     }
 
-    public Date getDeletionDate() {
-        return deletionDate;
-    }
-
     public State getState() {
         return state;
     }
@@ -44,11 +35,6 @@ public class PatchStateServiceBody {
 
     public PatchStateServiceBody setServicesIds(List<String> servicesIds) {
         this.servicesIds = servicesIds;
-        return this;
-    }
-
-    public PatchStateServiceBody setDeletionDate(Date deletionDate) {
-        this.deletionDate = deletionDate;
         return this;
     }
 

@@ -94,10 +94,17 @@ public class ServiceService {
                 });
     }
 
-    public Uni<Integer> patchState(PatchStateServiceBody patchStateServiceBody) {
-        return serviceRepository.patchState(patchStateServiceBody.getServicesIds(), patchStateServiceBody.getState())
+    public Uni<Void> patchState(List<PatchStateServiceBody> patchStateServiceBodyList) {
+        Uni<Void> sequence = Uni.createFrom().voidItem(); // Initial empty Uni
+
+        for (PatchStateServiceBody patchStateServiceBody : patchStateServiceBodyList) {
+            sequence = sequence.chain(() -> serviceRepository.patchState(patchStateServiceBody.getServicesIds(), patchStateServiceBody.getState()))
+                    .replaceWithVoid(); // Transform the result to Uni<Void>
+        }
+
+        return sequence
                 .onFailure().recoverWithUni(err -> {
-                    log.error(String.format("[SwarmApi@%s::update] Failed to update services in database : %s", this.getClass().getSimpleName(), err.getMessage()));
+                    log.error(String.format("[SwarmApi@%s::patchState] Failed to patch state in database : %s", this.getClass().getSimpleName(), err.getMessage()));
                     return Uni.createFrom().failure(new DeleteServiceException());
                 });
     }

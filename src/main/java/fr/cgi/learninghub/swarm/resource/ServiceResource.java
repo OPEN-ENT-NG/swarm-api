@@ -108,7 +108,7 @@ public class ServiceResource {
     @APIResponse(responseCode = "201", description = "Service status successfully updated")
     @APIResponse(responseCode = "400", description = "Wrong values given to update services status")
     @APIResponse(responseCode = "500", description = "Internal server error")
-    public Uni<Integer> patchStatus(@Valid PatchStateServiceBody patchStateServiceBody) {
+    public Uni<Void> patchStatus(@Valid List<PatchStateServiceBody> patchStateServiceBody) {
         return serviceService.patchState(patchStateServiceBody);
     }
 
