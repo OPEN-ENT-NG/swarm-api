@@ -2,9 +2,12 @@ package fr.cgi.learninghub.swarm.resource;
 
 import fr.cgi.learning.hub.swarm.common.entities.Service;
 import fr.cgi.learning.hub.swarm.common.enums.Type;
+import fr.cgi.learning.hub.tracer.Trace;
+import fr.cgi.learninghub.swarm.constants.Traces;
 import fr.cgi.learninghub.swarm.core.enums.Order;
 import fr.cgi.learninghub.swarm.exception.CreateServiceBadRequestException;
 import fr.cgi.learninghub.swarm.model.*;
+import fr.cgi.learninghub.swarm.service.MailService;
 import fr.cgi.learninghub.swarm.service.ServiceService;
 import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Uni;
@@ -13,7 +16,6 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.openapi.annotations.OpenAPIDefinition;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.info.Info;
@@ -118,8 +120,9 @@ public class ServiceResource {
     @APIResponse(responseCode = "201", description = "Mails successfully sent")
     @APIResponse(responseCode = "400", description = "Wrong values given to send mails")
     @APIResponse(responseCode = "500", description = "Internal server error")
-    public Response distributeMails(UpdateServiceBody updateServiceBody) {
-        return Response.status(Response.Status.CREATED).build();
+    @Trace(key = Traces.SEND_MAIL)
+    public Uni<Void> distributeMails(@Valid DistributeServiceBody distributeServiceBody) {
+        return serviceService.distribute(distributeServiceBody);
     }
 
 }

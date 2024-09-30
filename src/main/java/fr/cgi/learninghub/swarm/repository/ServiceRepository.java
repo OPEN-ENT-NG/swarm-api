@@ -1,28 +1,25 @@
 package fr.cgi.learninghub.swarm.repository;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-
-import fr.cgi.learninghub.swarm.exception.UpdateServiceBadRequestException;
-import fr.cgi.learninghub.swarm.model.UpdateServiceBody;
-import io.quarkus.hibernate.reactive.panache.PanacheRepositoryBase;
-import io.quarkus.panache.common.Parameters;
-import org.jboss.logging.Logger;
-
+import fr.cgi.learning.hub.swarm.common.entities.Service;
+import fr.cgi.learning.hub.swarm.common.enums.State;
+import fr.cgi.learning.hub.swarm.common.enums.Type;
 import fr.cgi.learninghub.swarm.core.enums.Order;
 import fr.cgi.learninghub.swarm.exception.CreateServiceException;
-import fr.cgi.learning.hub.swarm.common.enums.Type;
-import fr.cgi.learning.hub.swarm.common.enums.State;
-import fr.cgi.learning.hub.swarm.common.entities.Service;
+import io.quarkus.hibernate.reactive.panache.PanacheRepositoryBase;
 import io.quarkus.hibernate.reactive.panache.common.WithSession;
 import io.quarkus.panache.common.Page;
+import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
+import org.jboss.logging.Logger;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
 
 @WithSession
 @RegisterForReflection
@@ -70,6 +67,12 @@ public class ServiceRepository implements PanacheRepositoryBase<Service, String>
     public Uni<List<Service>> listByUsersIds(List<String> userIds) {
         return list("userId IN ?1 ORDER BY userId", userIds);
     }
+
+
+    public Uni<List<Service>> listByIds(List<String> ids) {
+        return list("id IN ?1", ids);
+    }
+
 
     public Uni<List<Service>> listByUsersIdsMultiple(List<String> userIds) {
         String query = "SELECT s FROM Service s " +

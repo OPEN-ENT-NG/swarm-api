@@ -9,12 +9,16 @@ import fr.cgi.learninghub.swarm.core.enums.Profile;
 import fr.cgi.learninghub.swarm.exception.*;
 import fr.cgi.learninghub.swarm.model.*;
 import fr.cgi.learninghub.swarm.repository.ServiceRepository;
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
+import java.time.LocalDate;
 import java.util.*;
+import java.util.regex.Pattern;
 
 @ApplicationScoped
 public class ServiceService {
@@ -26,6 +30,14 @@ public class ServiceService {
 
     @Inject
     UserEntService userEntService;
+
+    @ConfigProperty(name = "mail.domain")
+    String mailDomain;
+
+    @ConfigProperty(name = "host")
+    String host;
+    @Inject
+    MailService mailService;
 
     // Functions
 
@@ -62,7 +74,10 @@ public class ServiceService {
                 .chain(users -> Uni.createFrom().item(createServicesObjects(users, createServiceBody)))
                 .chain(serviceRepository::create)
                 .chain(services -> {
-                    services.forEach(service -> service.setServiceName(service.getServiceName() + service.getId())); // complete serviceNames with ids
+                    services.forEach(service -> {
+                        String path = String.format("%s%s-%s", host, service.getServiceName(), service.getId());
+                        service.setServiceName(path);
+                    });
                     return serviceRepository.patchServiceName(services);
                 })
                 .onFailure().recoverWithUni(err -> {
@@ -109,12 +124,45 @@ public class ServiceService {
                 });
     }
 
+
     public Uni<Integer> delete(DeleteServiceBody deleteServiceBody) {
         return serviceRepository.delete(deleteServiceBody.getServicesIds())
                 .onFailure().recoverWithUni(err -> {
                     log.error(String.format("[SwarmApi@%s::delete] Failed to delete services in database : %s", this.getClass().getSimpleName(), err.getMessage()));
                     return Uni.createFrom().failure(new DeleteServiceException());
                 });
+    }
+
+    public Uni<Void> distribute(DistributeServiceBody distributeServiceBody) {
+        return serviceRepository.listByIds(distributeServiceBody.getServicesIds())
+                .onItem().transformToMulti(services -> Multi.createFrom().iterable(services)) // Convert list to Multi
+                .onItem().transformToUniAndConcatenate(this::distributeMail) // Sequential processing of services
+                .collect().asList()
+                .replaceWithVoid();
+    }
+
+    private Uni<Void> distributeMail(Service service) {
+        MailBody mailBody = createMailBody(service);
+        return sendEmail(mailBody); // Process email sending as a Uni
+    }
+
+    private MailBody createMailBody(Service service) {
+        String subject = "Notification déploiement service";
+        String content = String.format(
+                "Bonjour %s %s,\n\nVous êtes notifié à propos du service suivant: %s\nDate: %s\n\nEmail: %s\n",
+                service.getFirstName(), service.getLastName(), service.getServiceName(), LocalDate.now(), service.getMail()
+        );
+
+        return new MailBody()
+                .setTo("sofianebernoussi@gmail.com")
+                .setSubject(subject)
+                .setContent(content);
+    }
+
+    private Uni<Void> sendEmail(MailBody mailBody) {
+        return mailService.send(mailBody)
+                .onItem().invoke(() -> {})
+                .onFailure().invoke(failure -> log.error(String.format("[SwarmApi@%s::distribute] Failed to distribute mails : %s", this.getClass().getSimpleName(), failure.getMessage())));
     }
 
     // Utils
@@ -179,24 +227,43 @@ public class ServiceService {
         List<Service> services = new ArrayList<>();
         List<Type> types = createServiceBody.getTypes();
         List<User> filteredUsers = filterUsersNotInBody(users, createServiceBody);
+        List<String> failedEmails = new ArrayList<>();
 
         filteredUsers.stream().forEach(user -> {
             types.stream().forEach(type -> {
                 Service service = new Service();
-                service.setUserId(user.getId())
-                        .setFirstName(user.getFirstName())
-                        .setLastName(user.getLastName())
-                        .setServiceName(String.format("%s-", PathType.getValue(type))) // FIXME This is bullshit code
-                        .setStructureId(user.getStructure())
-                        .setType(type)
-                        .setDeletionDate(createServiceBody.getDeletionDate())
-                        .setState(State.SCHEDULED);
-                services.add(service);
+                String email = String.format("%s@%s", user.getId(), mailDomain);
+                try {
+                    if (isValidUrl(host)) {
+                        service.setUserId(user.getId())
+                                .setFirstName(user.getFirstName())
+                                .setLastName(user.getLastName())
+                                .setServiceName(PathType.getValue(type))
+                                .setStructureId(user.getStructure())
+                                .setType(type)
+                                .setMail(email)
+                                .setDeletionDate(createServiceBody.getDeletionDate())
+                                .setState(State.SCHEDULED);
+                        services.add(service);
+                    } else {
+                        throw new InvalidMailException();
+                    }
+                } catch (InvalidMailException e) {
+                    failedEmails.add(email);
+                }
             });
         });
 
+        // Log all failed emails
+        if (!failedEmails.isEmpty()) {
+            log.error(String.format("[SwarmApi@%s::createServicesObjects] Failed to send mail for the following emails: %s",
+                    this.getClass().getSimpleName(), String.join(", ", failedEmails)));
+        }
+
         return services;
     }
+
+
 
     private List<User> filterUsersNotInBody(List<User> users, CreateServiceBody createServiceBody) {
         return users.stream()
@@ -254,4 +321,17 @@ public class ServiceService {
                     return Uni.createFrom().failure(new ListServiceException());
                 });
     }
+
+    private static boolean isValidUrl(String url) {
+        // Define the regular expression to match a valid URL (end with /, can be http(s)
+        final String URL_REGEX = "^https?:\\/\\/[^\s\\/$.?#].[^\s]*\\/$";
+        Pattern URL_PATTERN = Pattern.compile(URL_REGEX);
+
+        if (url == null || url.isBlank()) {
+            return false;
+        }
+
+        return URL_PATTERN.matcher(url).matches();
+    }
+
 }

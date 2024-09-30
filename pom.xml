@@ -15,6 +15,7 @@
     <quarkus.platform.version>3.14.3</quarkus.platform.version>
     <skipITs>true</skipITs>
     <surefire-plugin.version>3.2.5</surefire-plugin.version>
+    <request.tracer.version>1.1.0</request.tracer.version>
     <sonar.projectKey>CGI_app-swarm_swarm-api_3d6b8778-b6bc-42b6-b518-47d4659fbf76</sonar.projectKey>
     <sonar.projectName>swarm-api</sonar.projectName>
     <sonar.qualitygate.wait>true</sonar.qualitygate.wait>
@@ -29,6 +30,14 @@
     <repository>
       <id>nexus-snapshots</id>
       <url>https://nexus-pic2.support-ent.fr/repository/maven-snapshots/</url>
+    </repository>
+    <repository>
+      <id>hub-releases</id>
+      <url>https://nexus-pic2.support-ent.fr/repository/hub-releases/</url>
+    </repository>
+    <repository>
+      <id>hub-snapshots</id>
+      <url>https://nexus-pic2.support-ent.fr/repository/hub-snapshots/</url>
     </repository>
   </repositories>
 
@@ -76,6 +85,15 @@
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-openapi</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-mailer</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>fr.cgi.learning.hub</groupId>
+      <artifactId>request-tracer</artifactId>
+      <version>${request.tracer.version}</version>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
