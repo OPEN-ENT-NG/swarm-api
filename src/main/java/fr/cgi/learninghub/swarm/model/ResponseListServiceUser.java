@@ -24,12 +24,6 @@ public class ResponseListServiceUser {
     @Schema(description = "",
             example = "",
             required = true)
-    @JsonProperty("groups")
-    private List<GroupInfos> groups;
-
-    @Schema(description = "",
-            example = "",
-            required = true)
     @JsonProperty("services")
     private List<Service> services;
 
@@ -41,10 +35,6 @@ public class ResponseListServiceUser {
 
     public List<ClassInfos> getClasses() {
         return classes;
-    }
-
-    public List<GroupInfos> getGroups() {
-        return groups;
     }
 
     public List<Service> getServices() {
@@ -60,11 +50,6 @@ public class ResponseListServiceUser {
 
     public ResponseListServiceUser setClasses(List<ClassInfos> classes) {
         this.classes = classes;
-        return this;
-    }
-
-    public ResponseListServiceUser setGroups(List<GroupInfos> groups) {
-        this.groups = groups;
         return this;
     }
 

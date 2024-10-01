@@ -14,6 +14,12 @@ public class AppConfig {
     @ConfigProperty(name = "app.groupids")
     List<String> groupIds;
 
+    @ConfigProperty(name = "mail.domain")
+    String mailDomain;
+
+    @ConfigProperty(name = "host")
+    String host;
+
     public List<String> getClassIds() {
         return classIds;
     }
@@ -21,4 +27,10 @@ public class AppConfig {
     public List<String> getGroupIds() {
         return groupIds;
     }
+
+    public String getMailDomain() {
+        return mailDomain;
+    }
+
+    public String getHost() { return host; }
 }

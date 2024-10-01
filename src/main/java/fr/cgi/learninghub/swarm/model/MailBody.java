@@ -1,5 +1,8 @@
 package fr.cgi.learninghub.swarm.model;
 
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+
+@Schema(description = "MailBody object representing mail body")
 public class MailBody {
     private String to;
     private String subject;

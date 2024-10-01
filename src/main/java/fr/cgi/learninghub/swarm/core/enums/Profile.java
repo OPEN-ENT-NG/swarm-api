@@ -3,9 +3,9 @@ package fr.cgi.learninghub.swarm.core.enums;
 import java.util.Arrays;
 
 public enum Profile {
-  STUDENT("STUDENT"),
-  TEACHER("TEACHER"),
-  RELATIVE("RELATIVE");
+  STUDENT("Student"),
+  TEACHER("Teacher"),
+  RELATIVE("Relative");
 
   private final String value;
 

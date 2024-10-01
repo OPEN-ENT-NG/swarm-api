@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import fr.cgi.learning.hub.swarm.common.enums.Type;
 import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 
 import java.util.Date;
 import java.util.List;
@@ -11,20 +13,21 @@ import java.util.List;
 public class CreateServiceBody {
 
     @JsonProperty("types")
+    @NotNull
+    @NotEmpty
     private List<Type> types;
 
     @JsonProperty("deletion_date")
     @Future
+    @NotNull
     private Date deletionDate;
 
     @JsonProperty("users")
-    private List<String> usersIds;
-    
+    private List<String> userIds;
+
     @JsonProperty("classes")
-    private List<String> classesIds;
-    
-    @JsonProperty("groups")
-    private List<String> groupsIds;
+    private List<String> classIds;
+
 
     // Getter
 
@@ -36,17 +39,15 @@ public class CreateServiceBody {
         return deletionDate;
     }
 
-    public List<String> getUsersIds() {
-        return usersIds;
+    public List<String> getUsers() {
+        return userIds;
     }
 
-    public List<String> getClassesIds() {
-        return classesIds;
+    public List<String> getClasses() {
+        return classIds;
     }
 
-    public List<String> getGroupsIds() {
-        return groupsIds;
-    }
+
 
     // Setter
 
@@ -60,18 +61,14 @@ public class CreateServiceBody {
         return this;
     }
 
-    public CreateServiceBody setUsersIds(List<String> usersIds) {
-        this.usersIds = usersIds;
+    public CreateServiceBody setUsers(List<String> users) {
+        this.userIds = users;
         return this;
     }
 
-    public CreateServiceBody setClassesIds(List<String> classesIds) {
-        this.classesIds = classesIds;
+    public CreateServiceBody setClasses(List<String> classIds) {
+        this.classIds = classIds;
         return this;
     }
 
-    public CreateServiceBody setGroupsIds(List<String> groupsIds) {
-        this.groupsIds = groupsIds;
-        return this;
-    }
 }

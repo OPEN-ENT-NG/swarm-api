@@ -1,6 +1,7 @@
 package fr.cgi.learninghub.swarm.resource;
 
 import fr.cgi.learninghub.swarm.model.ResponseListUser;
+import fr.cgi.learninghub.swarm.model.User;
 import fr.cgi.learninghub.swarm.service.UserEntService;
 import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Uni;
@@ -19,6 +20,8 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.jboss.logging.Logger;
+
+import java.util.List;
 
 @Path("/users")
 @Produces(MediaType.APPLICATION_JSON)
@@ -41,10 +44,10 @@ public class UserResource {
     @GET
     @Operation(summary = "List users", description = "Get list of users available to the connected user")
     @APIResponse(responseCode = "200",
-                description = "List of users, their classes and groups successfully retrieved",
+                description = "List of users, their classes successfully retrieved",
                 content = @Content(mediaType = "application/json",
                 schema = @Schema(implementation = ResponseListUser.class, type = SchemaType.ARRAY)))
-    public Uni<ResponseListUser> list() {
+    public Uni<List<User>> list() {
         return userEntService.listGlobalUsersInfo();
     }
 }

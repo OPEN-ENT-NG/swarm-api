@@ -1,34 +1,32 @@
 package fr.cgi.learninghub.swarm.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.cgi.learninghub.swarm.clients.EntDirectoryClient;
 import fr.cgi.learninghub.swarm.config.AppConfig;
 import fr.cgi.learninghub.swarm.core.enums.Profile;
-import fr.cgi.learninghub.swarm.exception.ENTGetStructuresException;
 import fr.cgi.learninghub.swarm.exception.ENTGetUsersInfosException;
-
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
-import fr.cgi.learninghub.swarm.model.*;
+import fr.cgi.learninghub.swarm.model.ClassInfos;
+import fr.cgi.learninghub.swarm.model.ResponseListClasses;
+import fr.cgi.learninghub.swarm.model.User;
+import fr.cgi.learninghub.swarm.model.UserInfos;
+import fr.cgi.learninghub.swarm.repository.ServiceRepository;
+import io.smallrye.mutiny.Uni;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
-import io.smallrye.mutiny.Uni;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import fr.cgi.learning.hub.swarm.common.entities.Service;
-import fr.cgi.learninghub.swarm.repository.ServiceRepository;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 @ApplicationScoped
 public class UserEntService {
-    
+
     private static final Logger log = Logger.getLogger(UserEntService.class);
-    
+
     @Inject
     AppConfig appConfig;
 
@@ -42,109 +40,88 @@ public class UserEntService {
     @Inject
     JsonWebToken jwt;
 
-    public Uni<ResponseListUser> listGlobalUsersInfo() {
+    public Uni<List<User>> listGlobalUsersInfo() {
         return fetchMyUserInfo()
-                .chain(userInfos -> getUsersByUais(userInfos.getStructuresUais(), Profile.STUDENT))
-                .chain(this::filterUsersByClassAndGroup)
-                .chain(this::filterUsersByExistingUsersWithServices)
-                .chain(this::fetchClassGroupStructureUsersInfo)
+                .chain(userInfos -> getClassesByStructures(userInfos.getStructuresIds()))
+                .chain(this::filterClassesByConfig) // Étape 1: Filtrer les classes par la configuration
+                .chain(this::fetchAllUsersFromClasses) // Récupérer tous les utilisateurs directement par classe
                 .onFailure().recoverWithUni(err -> {
-                    log.error(String.format("[SwarmApi@%s::listGlobalUsersInfo] Failed to list global users info: %s", this.getClass().getSimpleName(), err.getMessage()));
-                    return Uni.createFrom().failure(new ENTGetStructuresException());
-                });
-    }
-
-    public Uni<List<User>> getUsersByUais(List<String> uais, Profile profile) {
-        return entDirectoryClient.listUserInStructuresByUAI(uais, true)
-                .chain(users -> Uni.createFrom().item(profile == null ? users : filterByProfile(users, profile)))
-                .onFailure().recoverWithUni(err -> {
-                    log.error(String.format("[SwarmApi@%s::getUsersByUais] Failed to list users for UAIs %s : %s", this.getClass().getSimpleName(), uais, err.getMessage()));
+                    log.error("Failed to fetch users: " + err.getMessage());
                     return Uni.createFrom().failure(new ENTGetUsersInfosException());
                 });
     }
-    private Uni<List<User>> filterUsersByClassAndGroup(List<User> users) {
-        return Uni.createFrom().item(users.stream()
-                .filter(user -> appConfig.getClassIds().stream().anyMatch(user.getClassIds()::contains) || appConfig.getGroupIds().stream().anyMatch(user.getGroupIds()::contains))
-                .toList());
+
+    // 1. Étape pour filtrer les classes par la configuration (appConfig)
+    private Uni<List<ClassInfos>> filterClassesByConfig(List<ClassInfos> classes) {
+        return Uni.createFrom().item(() ->
+                classes.stream()
+                        .filter(userClass -> appConfig.getClassIds().contains(userClass.getId()))
+                        .collect(Collectors.toList())
+        );
     }
 
-    private Uni<List<User>> filterUsersByExistingUsersWithServices(List<User> users) {
-        return serviceRepository.listByUsersIdsMultiple(getUsersIds(users))
-                .chain(services -> {
-                    // fetch all userId in existing services
-                    List<String> userIdsToFilter = services.stream().map(Service::getUserId).toList();
-                    // filtered users with users without services
-                    List<User> filteredUsers = removeUsersByIds(users, userIdsToFilter);
-                    return Uni.createFrom().item(filteredUsers);
+    // Étape pour récupérer tous les utilisateurs à partir des classes (sans grouper par école)
+    private Uni<List<User>> fetchAllUsersFromClasses(List<ClassInfos> classes) {
+        Map<String, User> userMap = new HashMap<>();
+
+        // Crée une liste d'opérations asynchrones pour chaque classe
+        List<Uni<List<User>>> userFetchUnis = classes.stream()
+                .map(this::fetchUsersByClass) // Récupère les utilisateurs pour chaque classe
+                .collect(Collectors.toList());
+
+        return Uni.combine().all().unis(userFetchUnis)
+                .with(userLists -> {
+                    List<List<User>> listsOfUsers = (List<List<User>>) userLists;
+                    // Aplatir les listes d'utilisateurs et les ajouter à la map
+                    listsOfUsers.stream()
+                            .flatMap(Collection::stream) // Utilise une expression lambda à la place de List::stream
+                            .forEach(user -> userMap.merge(user.getId(), user, (existingUser, newUser) -> {
+                                List<ClassInfos> newClasses = Stream.concat(existingUser.getClasses().stream(), newUser.getClasses().stream())
+                                        .toList();
+                                existingUser.setClassesInfos(newClasses);
+                                return existingUser;
+                            }));
+                    // Retourner la liste des utilisateurs fusionnés
+                    return new ArrayList<>(userMap.values());
+                });
+    }
+
+
+    // Étape pour récupérer les utilisateurs pour une classe donnée
+    private Uni<List<User>> fetchUsersByClass(ClassInfos userClass) {
+        return entDirectoryClient.getUsersByClass(userClass.getId(), Profile.STUDENT.getValue())
+                .onItem().transform(users -> users.stream()
+                        .peek(user -> {
+                            user.setClassesInfos(Collections.singletonList(userClass));
+                            user.setStructure(userClass.getSchoolId());
+                            user.setMail(String.format("%s@%s", user.getId(), appConfig.getMailDomain()));
+                        })
+                        .collect(Collectors.toList()));
+    }
+
+    // Étape pour récupérer les classes par structures
+    private Uni<List<ClassInfos>> getClassesByStructures(List<String> structureIds) {
+        return entDirectoryClient.listClassesInStructuresByIds(structureIds)
+                .onItem().transform(response -> {
+                    try {
+                        ObjectMapper mapper = new ObjectMapper();
+                        ResponseListClasses result = mapper.readValue(response, ResponseListClasses.class);
+                        return result.getResult().values().stream().collect(Collectors.toList());
+                    } catch (Exception e) {
+                        log.error(String.format("[SwarmApi@%s::getClassesByStructures] Failed to parse response for structures %s : %s", this.getClass().getSimpleName(), structureIds, e.getMessage()));
+                        throw new ENTGetUsersInfosException();
+                    }
                 })
-                .onFailure().recoverWithUni(throwable -> {
-                    log.error(String.format("[SwarmApi@%s::filterUsersByExistingUsersWithServices] Failed to filter users" +
-                                    " by existing users with services : %s", this.getClass().getSimpleName(), throwable.getMessage()));
+                .onFailure().recoverWithUni(err -> {
+                    log.error(String.format("[SwarmApi@%s::getClassesByStructures] Failed to list classes for structures %s : %s", this.getClass().getSimpleName(), structureIds, err.getMessage()));
                     return Uni.createFrom().failure(new ENTGetUsersInfosException());
                 });
     }
 
-    public Uni<ResponseListUser> fetchClassGroupStructureUsersInfo(List<User> users) {
-        List<ClassInfos> classInfos = new ArrayList<>();
-        List<GroupInfos> groupInfos = new ArrayList<>();
-
-        users.forEach(user -> {
-            classInfos.addAll(user.getClasses().stream().filter(c -> !classInfos.stream().map(ClassInfos::getId).toList().contains(c.getId())).toList());
-            // TODO MUST IMPLEMENT GROUPS
-            // groupInfos.addAll(user.getGroups().stream().filter(g -> !groupInfos.stream().map(StudentGroup::getId).toList().contains(g.getId())).toList());
-        });
-
-        // fetch
-        List<String> structuresFetchedFromUser = users.stream()
-                .map(User::getStructure)
-                .distinct()
-                .toList();
-
-        // fetch Structures info
-        return entDirectoryClient.listAllStructures()
-                .chain(structureInfos -> filterAndBuildStructuresWithUserStructureInfo(structureInfos, structuresFetchedFromUser))
-                .chain(structures -> Uni.createFrom().item(new ResponseListUser(users, classInfos, groupInfos, structures)))
-                .onFailure().recoverWithUni(throwable -> {
-                    log.error(String.format("[SwarmApi@%s::fetchClassGroupStructureUsersInfo] Failed to fetch class group structure users info : %s",
-                            this.getClass().getSimpleName(), throwable.getMessage()));
-                    return Uni.createFrom().failure(new ENTGetUsersInfosException());
-                });
-    }
-    public Uni<List<StructureInfos>> filterAndBuildStructuresWithUserStructureInfo(List<StructureInfos> structuresInfos, List<String> structureFromUser) {
-        // store all structureInfos in a Map
-        Map<String, StructureInfos> structureMap = structuresInfos.stream()
-                .collect(Collectors.toMap(StructureInfos::getExternalId, structure -> structure));
-
-        // Use Map to build StructureInfo with list of structure fetched from users
-        return Uni.createFrom().item(structureFromUser.stream()
-                .map(structureMap::get)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList()));
-    }
-
-    public Uni<List<User>> getAllUsers(Profile profile) {
-        return fetchMyUserInfo()
-            .chain(userInfos -> getUsersByUais(userInfos.getStructuresUais(), profile))
-            .onFailure().recoverWithUni(err -> {
-                log.error(String.format("[SwarmApi@%s::getAllUsers] Failed to get structures of connected user : %s", this.getClass().getSimpleName(), err.getMessage()));
-                return Uni.createFrom().failure(new ENTGetStructuresException());
-            });
-    }
 
     public Uni<UserInfos> fetchMyUserInfo() {
         String userId = jwt.getName(); // or use getClaim() if userId is stored in an attribute
         return entDirectoryClient.getUserInfos(userId);
     }
 
-    private List<User> removeUsersByIds(List<User> users, List<String> userIdsToFilter) {
-        return users.stream().filter(user -> !userIdsToFilter.contains(user.getId())).toList();     
-    }
-
-    private List<User> filterByProfile(List<User> users, Profile profile) {
-        return users.stream().filter(user -> user.getProfile() != null && user.getProfile() == profile).toList();
-    }
-
-    private List<String> getUsersIds(List<User> users) {
-        return users.stream().map(User::getId).toList();
-    }
 }

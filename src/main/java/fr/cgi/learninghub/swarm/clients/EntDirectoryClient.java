@@ -1,16 +1,16 @@
 package fr.cgi.learninghub.swarm.clients;
 
+import fr.cgi.learninghub.swarm.core.enums.Profile;
 import fr.cgi.learninghub.swarm.model.StructureInfos;
+import fr.cgi.learninghub.swarm.model.User;
+import fr.cgi.learninghub.swarm.model.UserInfos;
 import io.quarkus.rest.client.reactive.ClientBasicAuth;
 import io.smallrye.mutiny.Uni;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 import java.util.List;
-
-import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
-import fr.cgi.learninghub.swarm.model.User;
-import fr.cgi.learninghub.swarm.model.UserInfos;
 
 @Path("/directory")
 @RegisterRestClient(configKey = "ent-client")
@@ -31,6 +31,14 @@ public interface EntDirectoryClient {
     @GET
     @Path("/user/{userId}")
     Uni<UserInfos> getUserInfos(@PathParam("userId") String userId);
+
+    @GET
+    @Path("/api/classes")
+    Uni<String> listClassesInStructuresByIds(@QueryParam("id") List<String> structureIds);
+
+    @GET
+    @Path("/class/{classId}/users")
+    Uni<List<User>> getUsersByClass(@PathParam("classId") String classId, @QueryParam("type") String type);
 
     // @GET
     // @Path("/structure/{structureId}/users")

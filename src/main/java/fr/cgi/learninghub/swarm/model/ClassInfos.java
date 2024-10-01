@@ -7,16 +7,22 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 public class ClassInfos {
 
     @Schema(description = "Id of the class",
-            example = "42$1TES 2",
+            example = "a372ffa0-dae0-4858-9aaa-9035ccf41021",
             required = true)
-    @JsonProperty("id")
+    @JsonProperty("classId")
     private String id;
 
     @Schema(description = "Name of the class",
-            example = "1TES 2",
+            example = "6EME1",
             required = true)
     @JsonProperty("name")
     private String name;
+
+    @Schema(description = "ID of the class",
+            example = "334ca8d2-f36c-46c1-8120-848c5cc8b1fb",
+            required = true)
+    @JsonProperty("schoolId")
+    private String schoolId;
 
     // Getter
 
@@ -28,6 +34,11 @@ public class ClassInfos {
         return name;
     }
 
+    public String getSchoolId() {
+        return schoolId;
+    }
+
+
     // Setter
 
     public ClassInfos setId(String id) {
@@ -37,6 +48,11 @@ public class ClassInfos {
 
     public ClassInfos setName(String name) {
         this.name = name;
+        return this;
+    }
+
+    public ClassInfos setSchoolId(String schoolId) {
+        this.schoolId = schoolId;
         return this;
     }
 }

@@ -13,6 +13,16 @@
             <username>${NEXUS_USERNAME}</username>
             <password>${NEXUS_PASSWD}</password>
         </server>
+        <server>
+            <id>hub-snapshots</id>
+            <username>${NEXUS_USERNAME}</username>
+            <password>${NEXUS_PASSWD}</password>
+        </server>
+        <server>
+            <id>hub-releases</id>
+            <username>${NEXUS_USERNAME}</username>
+            <password>${NEXUS_PASSWD}</password>
+        </server>
     </servers>
 </settings>
 

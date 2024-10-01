@@ -1,23 +1,18 @@
 package fr.cgi.learninghub.swarm.model;
 
-import fr.cgi.learninghub.swarm.core.enums.Profile;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import com.fasterxml.jackson.annotation.JsonAlias;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
+import fr.cgi.learninghub.swarm.core.enums.Profile;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Schema(description = "User object representing a user in the system")
 public class User {
 
-    @Schema(description = "Unique identifier (as login) of the user",
-            example = "john.doe",
-            required = true)
-    @JsonAlias("login")
+    @Schema(description = "Unique identifier of the user",
+            example = "341b3e8e-e06c-4343-afa7-06d7f9214ba6")
+    @JsonProperty("id")
     private String id;
 
     @Schema(description = "First name of the user",
@@ -32,6 +27,16 @@ public class User {
     @JsonProperty("lastName")
     private String lastName;
 
+    @Schema(description = "Unique login of the user",
+            example = "john.doe")
+    @JsonProperty("login")
+    private String login;
+
+    @Schema(description = "String describing the mail of the user",
+            example = "mail@ng1.support-ent.fr")
+    @JsonProperty("mail")
+    private String mail;
+
     @Schema(description = "String describing the profile of the user",
             example = "Student")
     @JsonProperty("profiles")
@@ -44,13 +49,9 @@ public class User {
     private String structure;
 
     @Schema(description = "List of classes associated with the user",
-            example = "[{\"id\": \"42$1TES 2\", \"name\": \"1TES 2\"}]",
-            required = true)
+            example = "[{\"id\": \"42$1TES 2\", \"name\": \"1TES 2\"}]")
     @JsonProperty("classes")
     private List<ClassInfos> classes;
-
-    // @JsonAlias("manualGroups")
-    // private List<StudentGroup> groups;
 
     // Getter
 
@@ -66,6 +67,10 @@ public class User {
         return lastName;
     }
 
+    public String getLogin() {
+        return login;
+    }
+
     public Profile getProfile() {
         return profile;
     }
@@ -73,14 +78,10 @@ public class User {
     public String getStructure() {
         return structure;
     }
-    
+
     public List<ClassInfos> getClasses() {
         return classes;
     }
-    
-    // public List<StudentGroup> getGroups() {
-    //     return groups;
-    // }
 
     // Setter
 
@@ -99,6 +100,11 @@ public class User {
         return this;
     }
 
+    public User setLogin(String login) {
+        this.login = login;
+        return this;
+    }
+
     public User setProfile(String profile) {
         this.profile = Profile.getProfile(profile.toUpperCase());
         return this;
@@ -108,36 +114,28 @@ public class User {
         this.structure = structure;
         return this;
     }
-    
+
     public User setClasses(List<String> classes) {
-        List<ClassInfos> localClasses = new ArrayList<>();
-
         if (classes != null) {
-            classes.forEach(c -> {
-                String className = c.substring(c.indexOf("$") + 1);
-                localClasses.add(new ClassInfos().setId(c).setName(className));
-            });
+            this.classes = classes.stream()
+                    .map(classId -> new ClassInfos().setId(classId))
+                    .collect(Collectors.toList());
         }
-
-        this.classes = localClasses;
         return this;
     }
-    
-    // public User setGroups(List<StudentGroup> groups) {
-    //     this.groups = groups;
-    //     return this;
-    // }
 
-    // Functions
-
-    @JsonIgnore
-    public List<String> getClassIds() {
-        return this.classes.stream().map(c -> c.getId()).toList();
+    public User setClassesInfos(List<ClassInfos> classes) {
+        this.classes = classes;
+        return this;
     }
 
-    @JsonIgnore
-    public List<String> getGroupIds() {
-        return new ArrayList();
-        // return this.groups.stream().map(group -> group.getId()).toList();
+
+    public User setMail(String mail) {
+        this.mail = mail;
+        return this;
+    }
+
+    public String getMail() {
+        return mail;
     }
 }

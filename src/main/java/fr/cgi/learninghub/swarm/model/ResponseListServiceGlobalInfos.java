@@ -22,11 +22,6 @@ public class ResponseListServiceGlobalInfos {
     @JsonProperty("classes")
     private List<ClassInfos> classes;
 
-    @Schema(description = "List of all groups possible for this response",
-            example = "[{\"id\": \"0123456Z\", \"name\": \"Élèves du groupe 1TES 2\"}]")
-    @JsonProperty("groups")
-    private List<GroupInfos> groups;
-
     @Schema(description = "List of all users possible for this response",
             example = "[{\"id\": \"john.doe\", \"firstName\": \"John\", \"lastName\": \"Doe\", \"structure\": \"42\", \"classes\": [{\"id\": \"42$1TES 2\", \"name\": \"1TES 2\"}]}]")
     @JsonProperty("users")
@@ -44,10 +39,6 @@ public class ResponseListServiceGlobalInfos {
 
     public List<ClassInfos> getClasses() {
         return classes;
-    }
-
-    public List<GroupInfos> getGroups() {
-        return groups;
     }
 
     public List<UserInfos> getUsers() {
@@ -68,11 +59,6 @@ public class ResponseListServiceGlobalInfos {
 
     public ResponseListServiceGlobalInfos setClasses(List<ClassInfos> classes) {
         this.classes = classes;
-        return this;
-    }
-
-    public ResponseListServiceGlobalInfos setGroups(List<GroupInfos> groups) {
-        this.groups = groups;
         return this;
     }
 

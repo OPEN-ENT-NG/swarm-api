@@ -11,16 +11,18 @@ go to your ENT application -> go to admin console (/admin) -> choose Structure -
 Voici les Scopes à ajouter
 
 ```
-org.entcore.directory.controllers.StructureController|userList
-org.entcore.directory.controllers.UserController|get
-org.entcore.directory.controllers.UserController|getGroups 
-org.entcore.directory.controllers.UserController|myinfos
-org.entcore.directory.controllers.UserController|listUserInStructuresByUAI
-org.entcore.directory.controllers.ClassController|get
-org.entcore.directory.controllers.ClassController|findUsers 
+org.entcore.directory.controllers.StructureController|userList 
+org.entcore.directory.controllers.UserController|get 
+org.entcore.directory.controllers.UserController|getGroups  
+org.entcore.directory.controllers.UserController|myinfos 
+org.entcore.directory.controllers.UserController|listUserInStructuresByUAI 
+org.entcore.directory.controllers.ClassController|get 
+org.entcore.directory.controllers.ClassController|findUsers
 org.entcore.directory.controllers.GroupController|getGroup
-org.entcore.directory.controllers.StructureController|listStructures
+org.entcore.directory.controllers.DirectoryController|users
+org.entcore.directory.controllers.DirectoryController|people
 org.entcore.directory.controllers.DirectoryController|classes
+org.entcore.directory.controllers.ClassController|findUsers
 ```
 
 ![connector](/docs/ent-auth-api/assets/connector2.png)

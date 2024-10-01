@@ -9,6 +9,7 @@ import fr.cgi.learninghub.swarm.exception.CreateServiceBadRequestException;
 import fr.cgi.learninghub.swarm.model.*;
 import fr.cgi.learninghub.swarm.service.MailService;
 import fr.cgi.learninghub.swarm.service.ServiceService;
+import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
@@ -50,7 +51,6 @@ public class ServiceResource {
     @GET
     public Uni<ResponseListService> list(@Parameter(description = "Filter structures") @QueryParam("structures") List<String> structures,
                                          @Parameter(description = "Filter classes") @QueryParam("classes") List<String> classes,
-                                         @Parameter(description = "Filter groups") @QueryParam("groups") List<String> groups,
                                          @Parameter(description = "Search keywords") @QueryParam("search") String search,
                                          @Parameter(description = "Filter types of service") @QueryParam("types") List<Type> types,
                                          @Parameter(description = "Names order of the results") @QueryParam("order") Order order,
@@ -62,35 +62,35 @@ public class ServiceResource {
         if (page == null || page < 1) page = 1;
         if (limit == null || limit < 1) limit = 25;
 
-        return serviceService.listAllAndFilter(structures, classes, groups, search, types, order, page, limit);
+        return serviceService.listAllAndFilter(structures, classes, search, types, order, page, limit);
     }
 
     @POST
-    @Transactional
+    @WithTransaction
     @Operation(summary = "Create service", description = "Create a new service in the database")
     @APIResponse(responseCode = "400", description = "Wrong values given for services to create")
     @APIResponse(responseCode = "204", description = "Service successfully created")
-    public Uni<List<Service>> create(CreateServiceBody createServiceBody) {
-        Date now = new Date();
-        if (now.after(createServiceBody.getDeletionDate()))
-            return Uni.createFrom().failure(new CreateServiceBadRequestException());
+    @Trace(key = Traces.CREATE_SERVICE)
+    public Uni<List<Service>> create(@Valid CreateServiceBody createServiceBody) {
         return serviceService.create(createServiceBody);
     }
 
     @DELETE
     @Operation(summary = "Delete service", description = "Delete a service in the database")
-    @APIResponse(responseCode = "200", description = "Service successfully deleted")
+    @APIResponse(responseCode = "204", description = "Service successfully deleted")
     @APIResponse(responseCode = "400", description = "Wrong values given to delete services")
     @APIResponse(responseCode = "500", description = "Internal server error")
-    public Uni<Integer> delete(@Valid DeleteServiceBody deleteServiceBody) {
+    @Trace(key = Traces.DELETE_SERVICE)
+    public Uni<Void> delete(@Valid DeleteServiceBody deleteServiceBody) {
         return serviceService.delete(deleteServiceBody);
     }
 
     @PUT
     @Operation(summary = "Update service", description = "Update a service in the database")
-    @APIResponse(responseCode = "201", description = "Service successfully updated")
+    @APIResponse(responseCode = "204", description = "Service successfully updated")
     @APIResponse(responseCode = "400", description = "Wrong values given to update services")
     @APIResponse(responseCode = "500", description = "Internal server error")
+    @Trace(key = Traces.UPDATE_SERVICE)
     public Uni<Void> update(@Valid List<UpdateServiceBody> updateServiceBody) {
         return serviceService.update(updateServiceBody);
     }
@@ -98,18 +98,20 @@ public class ServiceResource {
     @PATCH
     @Path("/reset")
     @Operation(summary = "Reset service", description = "Reset a service in the database")
-    @APIResponse(responseCode = "201", description = "Service successfully reset")
+    @APIResponse(responseCode = "204", description = "Service successfully reset")
     @APIResponse(responseCode = "400", description = "Wrong values given to reset services")
     @APIResponse(responseCode = "500", description = "Internal server error")
-    public Uni<Integer> update(@Valid ResetServiceBody resetServiceBody) {
+    @Trace(key = Traces.RESET_SERVICE)
+    public Uni<Void> reset(@Valid ResetServiceBody resetServiceBody) {
         return serviceService.reset(resetServiceBody);
     }
 
     @PATCH
     @Operation(summary = "Patch status service", description = "Update a service status in the database")
-    @APIResponse(responseCode = "201", description = "Service status successfully updated")
+    @APIResponse(responseCode = "204", description = "Service status successfully updated")
     @APIResponse(responseCode = "400", description = "Wrong values given to update services status")
     @APIResponse(responseCode = "500", description = "Internal server error")
+    @Trace(key = Traces.PATCH_STATUS_SERVICE)
     public Uni<Void> patchStatus(@Valid List<PatchStateServiceBody> patchStateServiceBody) {
         return serviceService.patchState(patchStateServiceBody);
     }
@@ -117,7 +119,7 @@ public class ServiceResource {
     @POST
     @Path("/emails")
     @Operation(summary = "Distribute mails", description = "Distribute mails to users")
-    @APIResponse(responseCode = "201", description = "Mails successfully sent")
+    @APIResponse(responseCode = "204", description = "Mails successfully sent")
     @APIResponse(responseCode = "400", description = "Wrong values given to send mails")
     @APIResponse(responseCode = "500", description = "Internal server error")
     @Trace(key = Traces.SEND_MAIL)

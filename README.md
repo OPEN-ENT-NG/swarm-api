@@ -71,6 +71,58 @@ Simulation utilisateur ENT dans le keycloak ici :
 - [Provisioning User ENT](docs/user-provisioning/user-provisioning.md)
 
 
+## Configuration générale
+
+### Service API ENT
+
+| Propriété                                | Description                                                                                  | Exemple                              |
+|------------------------------------------|----------------------------------------------------------------------------------------------|--------------------------------------|
+| `%dev.quarkus.rest-client.ent-client.url` | L'URL du service API REST de l'ENT utilisée dans l'environnement de développement.            | `http://localhost:8090`              |
+| `app.rest-client.ent-client.username`    | Le nom d'utilisateur pour l'authentification auprès du service API REST.                      | `swarm`                              |
+| `app.rest-client.ent-client.password`    | Le mot de passe associé à l'utilisateur pour l'authentification auprès du service API REST.    | `azerty123`                          |
+
+### Variables d'application spécifiques
+
+| Propriété                     | Description                                                                                      | Exemple                       |
+|-------------------------------|--------------------------------------------------------------------------------------------------|-------------------------------|
+| `app.classaafids`              | Liste des identifiants d'une classe spécifique (format séparé par des virgules).                 | `3485$3A,3485$3B`             |
+| `app.groupids`                 | Liste des identifiants de groupe (format séparé par des virgules).                                  | `[]`                          |
+
+### Configuration du serveur de messagerie
+
+| Propriété                           | Description                                                                                      | Exemple                                  |
+|-------------------------------------|--------------------------------------------------------------------------------------------------|------------------------------------------|
+| `quarkus.mailer.from`               | L'adresse e-mail utilisée comme expéditeur pour l'envoi des e-mails.                              | `laurent.cgi@lyceeconnecte.fr`           |
+| `quarkus.mailer.host`               | L'adresse du serveur SMTP utilisé pour envoyer des e-mails.                                       | `mx.lyceeconnecte.fr`                    |
+| `quarkus.mailer.port`               | Le port utilisé pour la connexion au serveur SMTP.                                                | `587`                                    |
+| `quarkus.mailer.tls`                | Indique si TLS est activé (vrai/faux).                                                            | `false`                                  |
+| `quarkus.mailer.start-tls`          | Définit si le TLS est requis pour la connexion au serveur SMTP.                                   | `REQUIRED`                               |
+| `quarkus.mailer.username`           | Le nom d'utilisateur pour l'authentification SMTP.                                                | `laurent.cgi@lyceeconnecte.fr`           |
+| `quarkus.mailer.password`           | Le mot de passe associé à l'utilisateur pour l'authentification SMTP.                             | `B0_N0uv3113Aqu!ta!n32024`               |
+
+### Autres paramètres
+
+| Propriété           | Description                                                                                      | Exemple                                  |
+|---------------------|--------------------------------------------------------------------------------------------------|------------------------------------------|
+| `host`              | L'URL du service d'hébergement principal de l'application.                                        | `https://swarm.support-ent.fr/`          |
+| `mail.domain`       | Le domaine utilisé pour les adresses e-mail dans les communications sortantes.                    | `ng1.support-ent.fr`                     |
+
+### Configuration spécifique à l'environnement
+
+| Propriété                        | Environnement    | Description                                                                                      | Exemple  |
+|----------------------------------|------------------|--------------------------------------------------------------------------------------------------|----------|
+| `%dev.quarkus.mailer.mock`       | Développement    | Indique si l'envoi de mails est simulé dans l'environnement de développement.                     | `false`  |
+| `%test.quarkus.mailer.mock`      | Test             | Indique si l'envoi de mails est simulé dans l'environnement de test.                              | `true`   |
+
+---
+
+### Remarques
+
+* Les propriétés avec le préfixe `%dev` sont utilisées uniquement dans l'environnement de développement.
+* Les propriétés avec le préfixe `%test` sont utilisées uniquement dans l'environnement de test.
+
+
+
 ### Keycloak config
 
 ```bash
@@ -174,3 +226,5 @@ If you want to learn more about building native executables, please consult http
 Easily start your REST Web Services
 
 [Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
+
+

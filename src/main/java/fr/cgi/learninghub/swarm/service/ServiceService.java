@@ -4,8 +4,8 @@ import fr.cgi.learning.hub.swarm.common.entities.Service;
 import fr.cgi.learning.hub.swarm.common.enums.PathType;
 import fr.cgi.learning.hub.swarm.common.enums.State;
 import fr.cgi.learning.hub.swarm.common.enums.Type;
+import fr.cgi.learninghub.swarm.config.AppConfig;
 import fr.cgi.learninghub.swarm.core.enums.Order;
-import fr.cgi.learninghub.swarm.core.enums.Profile;
 import fr.cgi.learninghub.swarm.exception.*;
 import fr.cgi.learninghub.swarm.model.*;
 import fr.cgi.learninghub.swarm.repository.ServiceRepository;
@@ -13,12 +13,15 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class ServiceService {
@@ -31,31 +34,26 @@ public class ServiceService {
     @Inject
     UserEntService userEntService;
 
-    @ConfigProperty(name = "mail.domain")
-    String mailDomain;
-
-    @ConfigProperty(name = "host")
-    String host;
     @Inject
     MailService mailService;
+    @Inject
+    AppConfig appConfig;
 
     // Functions
 
-    public Uni<ResponseListService> listAllAndFilter(List<String> structures, List<String> classes, List<String> groups,
+    public Uni<ResponseListService> listAllAndFilter(List<String> structures, List<String> classes,
                                                      String search, List<Type> types, Order order, int page, int limit) {
         return userEntService.fetchMyUserInfo()
-                .chain(userInfos -> userEntService.getUsersByUais(userInfos.getStructuresUais(), Profile.STUDENT)
+                .chain(userInfos -> userEntService.listGlobalUsersInfo()
                         .chain(students -> {
+                            // Filtrage structures/classes
                             List<User> filteredStudents = students;
                             if (structures != null && !structures.isEmpty()) {
                                 filteredStudents = filteredStudents.stream().filter(student -> structures.contains(student.getStructure())).toList();
                             }
                             if (classes != null && !classes.isEmpty()) {
-                                filteredStudents = filteredStudents.stream().filter(student -> classes.stream().anyMatch(student.getClassIds()::contains)).toList();
+                                filteredStudents = filteredStudents.stream().filter(student -> classes.stream().anyMatch(student.getClasses().stream().map(ClassInfos::getId).toList()::contains)).toList();
                             }
-//                if (groups != null && !groups.isEmpty()) {
-//                    filteredStudents = filteredStudents.stream().filter(student -> groups.stream().anyMatch(student.getGroupIds()::contains)).toList();
-//                }
 
                             return getServicesFromFilteredUsers(search, types, order, page, limit, students, filteredStudents, userInfos);
                         })
@@ -70,39 +68,79 @@ public class ServiceService {
     }
 
     public Uni<List<Service>> create(CreateServiceBody createServiceBody) {
-        return userEntService.getAllUsers(Profile.STUDENT)
-                .chain(users -> Uni.createFrom().item(createServicesObjects(users, createServiceBody)))
-                .chain(serviceRepository::create)
-                .chain(services -> {
-                    services.forEach(service -> {
-                        String path = String.format("%s%s-%s", host, service.getServiceName(), service.getId());
-                        service.setServiceName(path);
-                    });
-                    return serviceRepository.patchServiceName(services);
-                })
+        return userEntService.listGlobalUsersInfo()
+                .chain(users -> filterUserServices(users, createServiceBody.getClasses(), createServiceBody.getUsers()))
+                .chain(users -> buildUserServices(createServiceBody, users))
+                .chain(this::createServices)
+                .chain(this::patchServicesName)
                 .onFailure().recoverWithUni(err -> {
                     log.error(String.format("[SwarmApi@%s::create] Failed to create service in database : %s", this.getClass().getSimpleName(), err.getMessage()));
                     return Uni.createFrom().failure(new CreateServiceException());
                 });
     }
 
+    private Uni<List<Service>> createServices(List<Service> services) {
+        return Multi.createFrom().iterable(services)
+                .onItem()
+                .transformToUniAndConcatenate(this::createService)
+                .collect().asList();
+    }
+
+    private Uni<Service> createService(Service service) {
+        return serviceRepository.findUserService(service)
+                .onItem()
+                .ifNull()
+                .switchTo(serviceRepository.persistAndFlush(service));
+    }
+
+    private Uni<List<Service>> patchServicesName(List<Service> services) {
+        return Multi.createFrom().iterable(services)
+                .onItem()
+                .transformToUniAndConcatenate(service -> this.updateServiceName(service, getServiceName(service)))
+                .collect().asList();
+    }
+
+    private String getServiceName(Service service) {
+        return String.format("%s-%s", service.getServiceName(), service.getId());
+    }
+
+    public Uni<Service> updateServiceName(Service service, String serviceName) {
+        return serviceRepository.updateServiceName(service, serviceName);
+    }
+
+    private Uni<List<User>> filterUserServices(List<User> users, List<String> classIds, List<String> userIds) {
+        List<User> filteredUsers = users.stream()
+                .filter(user -> userIds.contains(user.getId()) ||
+                        (classIds != null && !classIds.isEmpty() && user.getClasses().stream()
+                                .filter(Objects::nonNull)
+                                .map(ClassInfos::getId)
+                                .anyMatch(classIds::contains)))
+                .collect(Collectors.toList());
+        return Uni.createFrom().item(filteredUsers);
+    }
+
+
     public Uni<Void> update(List<UpdateServiceBody> updateServiceBodyList) {
-        Uni<Void> sequence = Uni.createFrom().voidItem();
-
-        for (UpdateServiceBody updateServiceBody : updateServiceBodyList) {
-            sequence = sequence.chain(() -> serviceRepository.update(updateServiceBody.getServicesIds(), updateServiceBody.getDeletionDate()))
-                    .replaceWithVoid();
-        }
-
-        return sequence
+        return userEntService.fetchMyUserInfo()
+                .chain(user -> Multi.createFrom().iterable(updateServiceBodyList)
+                        .onItem()
+                        .transformToUniAndConcatenate(updateServiceBody ->
+                                serviceRepository.update(updateServiceBody.getServicesIds(), updateServiceBody.getDeletionDate(), user.getStructuresIds())
+                        )
+                        .collect().asList()
+                        .replaceWithVoid()
+                )
                 .onFailure().recoverWithUni(err -> {
                     log.error(String.format("[SwarmApi@%s::update] Failed to update services in database : %s", this.getClass().getSimpleName(), err.getMessage()));
                     return Uni.createFrom().failure(new DeleteServiceException());
                 });
     }
 
-    public Uni<Integer> reset(ResetServiceBody resetServiceBody) {
-        return serviceRepository.reset(resetServiceBody.getServicesIds(), resetServiceBody.getDeletionDate())
+
+    public Uni<Void> reset(ResetServiceBody resetServiceBody) {
+        return userEntService.fetchMyUserInfo()
+                .chain(user -> serviceRepository.reset(resetServiceBody.getServicesIds(), resetServiceBody.getDeletionDate(), user.getStructuresIds()))
+                .onItem().transformToUni(count -> Uni.createFrom().voidItem())
                 .onFailure().recoverWithUni(err -> {
                     log.error(String.format("[SwarmApi@%s::update] Failed to update services in database : %s", this.getClass().getSimpleName(), err.getMessage()));
                     return Uni.createFrom().failure(new DeleteServiceException());
@@ -110,14 +148,15 @@ public class ServiceService {
     }
 
     public Uni<Void> patchState(List<PatchStateServiceBody> patchStateServiceBodyList) {
-        Uni<Void> sequence = Uni.createFrom().voidItem(); // Initial empty Uni
-
-        for (PatchStateServiceBody patchStateServiceBody : patchStateServiceBodyList) {
-            sequence = sequence.chain(() -> serviceRepository.patchState(patchStateServiceBody.getServicesIds(), patchStateServiceBody.getState()))
-                    .replaceWithVoid(); // Transform the result to Uni<Void>
-        }
-
-        return sequence
+        return userEntService.fetchMyUserInfo()
+                .chain(user -> Multi.createFrom().iterable(patchStateServiceBodyList)
+                        .onItem()
+                        .transformToUniAndConcatenate(patchStateServiceBody ->
+                                serviceRepository.patchState(patchStateServiceBody.getServicesIds(), patchStateServiceBody.getState(), user.getStructuresIds())
+                        )
+                        .collect().asList()
+                        .replaceWithVoid()
+                )
                 .onFailure().recoverWithUni(err -> {
                     log.error(String.format("[SwarmApi@%s::patchState] Failed to patch state in database : %s", this.getClass().getSimpleName(), err.getMessage()));
                     return Uni.createFrom().failure(new DeleteServiceException());
@@ -125,18 +164,21 @@ public class ServiceService {
     }
 
 
-    public Uni<Integer> delete(DeleteServiceBody deleteServiceBody) {
-        return serviceRepository.delete(deleteServiceBody.getServicesIds())
-                .onFailure().recoverWithUni(err -> {
-                    log.error(String.format("[SwarmApi@%s::delete] Failed to delete services in database : %s", this.getClass().getSimpleName(), err.getMessage()));
-                    return Uni.createFrom().failure(new DeleteServiceException());
-                });
+    public Uni<Void> delete(DeleteServiceBody deleteServiceBody) {
+        return userEntService.fetchMyUserInfo()
+                .chain(user -> serviceRepository.delete(deleteServiceBody.getServicesIds(), user.getStructuresIds())
+                        .onItem().transformToUni(count -> Uni.createFrom().voidItem())
+                        .onFailure().recoverWithUni(err -> {
+                            log.error(String.format("[SwarmApi@%s::delete] Failed to delete services in database : %s", this.getClass().getSimpleName(), err.getMessage()));
+                            return Uni.createFrom().failure(new DeleteServiceException());
+                        }));
     }
 
     public Uni<Void> distribute(DistributeServiceBody distributeServiceBody) {
-        return serviceRepository.listByIds(distributeServiceBody.getServicesIds())
-                .onItem().transformToMulti(services -> Multi.createFrom().iterable(services)) // Convert list to Multi
-                .onItem().transformToUniAndConcatenate(this::distributeMail) // Sequential processing of services
+        return userEntService.fetchMyUserInfo()
+                .chain(user -> serviceRepository.listByIds(distributeServiceBody.getServicesIds(), user.getStructuresIds()))
+                .onItem().transformToMulti(services -> Multi.createFrom().iterable(services))
+                .onItem().transformToUniAndConcatenate(this::distributeMail)
                 .collect().asList()
                 .replaceWithVoid();
     }
@@ -154,14 +196,15 @@ public class ServiceService {
         );
 
         return new MailBody()
-                .setTo("sofianebernoussi@gmail.com")
+                .setTo(service.getMail())
                 .setSubject(subject)
                 .setContent(content);
     }
 
     private Uni<Void> sendEmail(MailBody mailBody) {
         return mailService.send(mailBody)
-                .onItem().invoke(() -> {})
+                .onItem().invoke(() -> {
+                })
                 .onFailure().invoke(failure -> log.error(String.format("[SwarmApi@%s::distribute] Failed to distribute mails : %s", this.getClass().getSimpleName(), failure.getMessage())));
     }
 
@@ -169,10 +212,10 @@ public class ServiceService {
 
     private Uni<ResponseListService> getServicesFromFilteredUsers(String search, List<Type> types, Order order, int page, int limit,
                                                                   List<User> students, List<User> filteredStudents, UserInfos userInfos) {
-        List<String> usersIds = filteredStudents.stream().map(User::getId).toList();
+        List<String> usersLogin = filteredStudents.stream().map(User::getLogin).toList();
         List<State> hiddenStates = Arrays.asList(State.DEPLOYMENT_IN_ERROR, State.DELETION_SCHEDULED, State.DELETION_IN_PROGRESS, State.DELETION_IN_ERROR, State.RESET_IN_ERROR);
 
-        return serviceRepository.listAllWithFilter(usersIds, search, types, hiddenStates)
+        return serviceRepository.listAllWithFilter(usersLogin, search, types, hiddenStates)
                 .chain(services -> {
                     // Calculate total users
                     List<String> finalUsersIds = services.stream().map(Service::getUserId).distinct().toList();
@@ -191,15 +234,15 @@ public class ServiceService {
                 });
     }
 
-    private Uni<ResponseListService> buildResponseListService(Order order, int page, int limit, List<String> usersIds, List<User> filteredStudents,
+    private Uni<ResponseListService> buildResponseListService(Order order, int page, int limit, List<String> usersLogin, List<User> filteredStudents,
                                                               UserInfos userInfos, ResponseListServiceGlobalInfos responseListServiceGlobalInfos) {
-        return serviceRepository.listAllWithFilterAndLimit(usersIds, order, page, limit)
+        return serviceRepository.listAllWithFilterAndLimit(usersLogin, order, page, limit)
                 .chain(services -> {
                     List<ResponseListServiceUser> users = new ArrayList<>();
-                    usersIds.forEach(userId -> {
-                        List<Service> userServices = services.stream().filter(service -> service.getUserId().equals(userId)).toList();
+                    usersLogin.forEach(login -> {
+                        List<Service> userServices = services.stream().filter(service -> service.getLogin().equals(login)).toList();
                         List<ClassInfos> userClasses = filteredStudents.stream()
-                                .filter(student -> student.getId().equals(userId))
+                                .filter(student -> student.getLogin().equals(login))
                                 .findFirst()
                                 .map(User::getClasses)
                                 .orElse(null);
@@ -223,104 +266,94 @@ public class ServiceService {
                 });
     }
 
-    private List<Service> createServicesObjects(List<User> users, CreateServiceBody createServiceBody) {
+    public Uni<List<Service>> buildUserServices(CreateServiceBody createServiceBody, List<User> users) {
         List<Service> services = new ArrayList<>();
         List<Type> types = createServiceBody.getTypes();
-        List<User> filteredUsers = filterUsersNotInBody(users, createServiceBody);
-        List<String> failedEmails = new ArrayList<>();
 
-        filteredUsers.stream().forEach(user -> {
-            types.stream().forEach(type -> {
+        users.forEach(user -> types.forEach(type -> {
+            for (ClassInfos classInfo : user.getClasses()) {
                 Service service = new Service();
-                String email = String.format("%s@%s", user.getId(), mailDomain);
-                try {
-                    if (isValidUrl(host)) {
-                        service.setUserId(user.getId())
-                                .setFirstName(user.getFirstName())
-                                .setLastName(user.getLastName())
-                                .setServiceName(PathType.getValue(type))
-                                .setStructureId(user.getStructure())
-                                .setType(type)
-                                .setMail(email)
-                                .setDeletionDate(createServiceBody.getDeletionDate())
-                                .setState(State.SCHEDULED);
-                        services.add(service);
-                    } else {
-                        throw new InvalidMailException();
-                    }
-                } catch (InvalidMailException e) {
-                    failedEmails.add(email);
-                }
-            });
-        });
+                service.setUserId(user.getId())
+                        .setFirstName(user.getFirstName())
+                        .setLastName(user.getLastName())
+                        .setLogin(user.getLogin())
+                        .setServiceName(PathType.getValue(type))
+                        .setStructureId(user.getStructure())
+                        .setType(type)
+                        .setMail(user.getMail())
+                        .setClassId(classInfo.getId())
+                        .setDeletionDate(createServiceBody.getDeletionDate())
+                        .setState(State.SCHEDULED);
+                services.add(service);
+            }
+        }));
 
-        // Log all failed emails
-        if (!failedEmails.isEmpty()) {
-            log.error(String.format("[SwarmApi@%s::createServicesObjects] Failed to send mail for the following emails: %s",
-                    this.getClass().getSimpleName(), String.join(", ", failedEmails)));
-        }
-
-        return services;
+        return Uni.createFrom().item(services);
     }
 
-
-
-    private List<User> filterUsersNotInBody(List<User> users, CreateServiceBody createServiceBody) {
-        return users.stream()
-                .filter(user -> {
-                    List<String> classesIds = user.getClasses().stream().map(ClassInfos::getId).toList();
-                    // List<String> groupsIds = user.getGroups().stream().map(GroupInfos::getId).toList();
-
-                    return createServiceBody.getUsersIds().contains(user.getId()) ||
-                            createServiceBody.getClassesIds().stream().anyMatch(classesIds::contains);
-                }).toList();
-    }
 
     private Uni<ResponseListServiceGlobalInfos> setResponseListServiceGlobalInfos(List<User> students, UserInfos userInfos, int totalUsers, List<State> hiddenStates) {
         return serviceRepository.listAll()
-                .chain(allServices -> {
-                    allServices = allServices.stream().filter(service -> !hiddenStates.contains(service.getState())).toList();
-                    List<String> allServicesIds = allServices.stream().map(Service::getUserId).toList();
-                    List<User> finalStudents = students.stream().filter(student -> allServicesIds.contains(student.getId())).toList();
-
-                    // Find all structures for filtered users
-                    List<String> structuresInfosIds = finalStudents.stream().map(User::getStructure).distinct().toList();
-                    List<StructureInfos> structuresInfos = userInfos.getStructures().stream().filter(s -> structuresInfosIds.contains(s.getExternalId())).distinct().toList();
-
-                    // Find all classes infos for filtered users
-                    List<ClassInfos> classesInfos = new ArrayList<>();
-                    Set<String> seenIds = new HashSet<>();
-                    finalStudents.stream()
-                            .map(User::getClasses)
-                            .flatMap(List::stream)
-                            .filter(classInfo -> seenIds.add(classInfo.getId())) // keep objects only once thanks to the 'add' to the Set returning false if the id alreadyexists
-                            .forEach(classInfo -> classesInfos.add(classInfo));
-
-                    // Find all groups infos for filtered users
-                    // List<ClassInfos> groupsInfos = new ArrayList<>();
-
-                    // Find all user infos for filtered users
-                    List<UserInfos> usersInfos = finalStudents.stream()
-                            .map(student -> {
-                                return new UserInfos()
-                                        .setId(student.getId())
-                                        .setFirstName(student.getFirstName())
-                                        .setLastName(student.getLastName());
-                            }).toList();
-
-                    ResponseListServiceGlobalInfos responseListServiceGlobalInfos = new ResponseListServiceGlobalInfos()
-                            .setTotalUsers((long) totalUsers)
-                            .setStructures(structuresInfos)
-                            .setClasses(classesInfos)
-                            .setUsers(usersInfos);
-
-                    return Uni.createFrom().item(responseListServiceGlobalInfos);
-                })
+                .chain(allServices -> filterServices(allServices, hiddenStates))
+                .chain(filteredServices -> filterStudentsByServices(students, filteredServices))
+                .chain(filteredStudents -> createResponse(filteredStudents, userInfos, totalUsers))
                 .onFailure().recoverWithUni(err -> {
-                    log.error(String.format("[SwarmApi@%s::setResponseListServiceGlobalInfos] Failed to list all services from database : %s", this.getClass().getSimpleName(), err.getMessage()));
+                    log.error(String.format("[SwarmApi@%s::setResponseListServiceGlobalInfos] Failed to list all services from database: %s", this.getClass().getSimpleName(), err.getMessage()));
                     return Uni.createFrom().failure(new ListServiceException());
                 });
     }
+
+    private Uni<List<Service>> filterServices(List<Service> allServices, List<State> hiddenStates) {
+        List<Service> filteredServices = allServices.stream()
+                .filter(service -> !hiddenStates.contains(service.getState()))
+                .toList();
+        return Uni.createFrom().item(filteredServices);
+    }
+
+    private Uni<List<User>> filterStudentsByServices(List<User> students, List<Service> filteredServices) {
+        List<String> serviceUserIds = filteredServices.stream()
+                .map(Service::getUserId)
+                .toList();
+
+        List<User> filteredStudents = students.stream()
+                .filter(student -> serviceUserIds.contains(student.getId()))
+                .toList();
+
+        return Uni.createFrom().item(filteredStudents);
+    }
+
+    private Uni<ResponseListServiceGlobalInfos> createResponse(List<User> filteredStudents, UserInfos userInfos, int totalUsers) {
+        List<String> structureIds = filteredStudents.stream()
+                .map(User::getStructure)
+                .distinct()
+                .toList();
+
+        List<StructureInfos> structureInfos = userInfos.getStructures().stream()
+                .filter(structure -> structureIds.contains(structure.getId()))
+                .distinct()
+                .toList();
+
+        List<ClassInfos> classInfos = filteredStudents.stream()
+                .flatMap(student -> student.getClasses().stream())
+                .distinct()
+                .toList();
+
+        List<UserInfos> userInfosList = filteredStudents.stream()
+                .map(student -> new UserInfos()
+                        .setId(student.getId())
+                        .setFirstName(student.getFirstName())
+                        .setLastName(student.getLastName()))
+                .toList();
+
+        ResponseListServiceGlobalInfos response = new ResponseListServiceGlobalInfos()
+                .setTotalUsers((long) totalUsers)
+                .setStructures(structureInfos)
+                .setClasses(classInfos)
+                .setUsers(userInfosList);
+
+        return Uni.createFrom().item(response);
+    }
+
 
     private static boolean isValidUrl(String url) {
         // Define the regular expression to match a valid URL (end with /, can be http(s)
