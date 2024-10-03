@@ -153,7 +153,7 @@ class ServiceRepositoryTest {
         Uni<List<Service>> servicesUni = serviceRepository.listByIds(serviceIds);
         List<Service> resetServices = servicesUni.await().indefinitely();
 
-        assertTrue(resetServices.stream().allMatch(s -> s.getState().equals(State.RESET_IN_PROGRESS)));
+        assertTrue(resetServices.stream().allMatch(s -> s.getState().equals(State.RESET_SCHEDULED)));
         assertTrue(resetServices.stream().allMatch(s -> s.getDeletionDate().equals(newDeletionDate)));
     }*/
 }

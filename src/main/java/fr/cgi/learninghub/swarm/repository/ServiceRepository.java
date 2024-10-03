@@ -114,7 +114,7 @@ public class ServiceRepository implements PanacheRepositoryBase<Service, String>
 
     public Uni<Integer> reset(List<String> serviceIds, Date deletionDate, List<String> structureIds) {
         String query = "state = :state, deletionDate = :deletionDate WHERE id IN :serviceIds AND structureId IN :structureIds";
-        Parameters params = Parameters.with("state", State.RESET_IN_PROGRESS)
+        Parameters params = Parameters.with("state", State.RESET_SCHEDULED)
                 .and("deletionDate", deletionDate)
                 .and("serviceIds", serviceIds)
                 .and("structureIds", structureIds);
