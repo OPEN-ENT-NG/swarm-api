@@ -43,8 +43,8 @@ public class UserEntService {
     public Uni<List<User>> listGlobalUsersInfo() {
         return fetchMyUserInfo()
                 .chain(userInfos -> getClassesByStructures(userInfos.getStructuresIds()))
-                .chain(this::filterClassesByConfig) // Étape 1: Filtrer les classes par la configuration
-                .chain(this::fetchAllUsersFromClasses) // Récupérer tous les utilisateurs directement par classe
+                .chain(this::filterClassesByConfig) 
+                .chain(this::getUsersByClasses) 
                 .onFailure().recoverWithUni(err -> {
                     log.error("Failed to fetch users: " + err.getMessage());
                     return Uni.createFrom().failure(new ENTGetUsersInfosException());
@@ -61,7 +61,7 @@ public class UserEntService {
     }
 
     // Étape pour récupérer tous les utilisateurs à partir des classes (sans grouper par école)
-    private Uni<List<User>> fetchAllUsersFromClasses(List<ClassInfos> classes) {
+    private Uni<List<User>> getUsersByClasses(List<ClassInfos> classes) {
         Map<String, User> userMap = new HashMap<>();
 
         // Crée une liste d'opérations asynchrones pour chaque classe

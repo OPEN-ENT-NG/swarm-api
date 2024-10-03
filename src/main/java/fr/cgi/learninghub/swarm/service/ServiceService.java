@@ -240,7 +240,17 @@ public class ServiceService {
                 .chain(services -> {
                     List<ResponseListServiceUser> users = new ArrayList<>();
                     usersLogin.forEach(login -> {
-                        List<Service> userServices = services.stream().filter(service -> service.getLogin().equals(login)).toList();
+                        List<Service> userServices = services.stream()
+                                .filter(service -> service.getLogin().equals(login))
+                                .peek(service -> {
+                                    String path = String.format("%s%s", appConfig.getHost(), service.getServiceName());
+                                    if (validateUrl(path)) {
+                                        service.setServiceName(path);
+                                    } else {
+                                        throw new IllegalArgumentException("Invalid service path URL: " + path);
+                                    }
+                                }).toList();
+
                         List<ClassInfos> userClasses = filteredStudents.stream()
                                 .filter(student -> student.getLogin().equals(login))
                                 .findFirst()
@@ -355,9 +365,8 @@ public class ServiceService {
     }
 
 
-    private static boolean isValidUrl(String url) {
-        // Define the regular expression to match a valid URL (end with /, can be http(s)
-        final String URL_REGEX = "^https?:\\/\\/[^\s\\/$.?#].[^\s]*\\/$";
+    private static boolean validateUrl(String url) {
+        final String URL_REGEX = "^https?:\\/\\/[^\s\\/$.?#].[^\s]*$";
         Pattern URL_PATTERN = Pattern.compile(URL_REGEX);
 
         if (url == null || url.isBlank()) {

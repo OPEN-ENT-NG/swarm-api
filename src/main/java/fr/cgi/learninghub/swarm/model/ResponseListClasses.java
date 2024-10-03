@@ -9,7 +9,7 @@ import java.util.Map;
 @Schema(description = "ResponseListClasses object representing the response to the get classes endpoint")
 public class ResponseListClasses {
     private Map<String, ClassInfos> result;
-    private String status; // Ajout du champ status
+    private String status;
 
 
     public Map<String, ClassInfos> getResult() {

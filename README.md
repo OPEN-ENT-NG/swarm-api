@@ -83,22 +83,21 @@ Simulation utilisateur ENT dans le keycloak ici :
 
 ### Variables d'application spécifiques
 
-| Propriété                     | Description                                                                                      | Exemple                       |
-|-------------------------------|--------------------------------------------------------------------------------------------------|-------------------------------|
-| `app.classaafids`              | Liste des identifiants d'une classe spécifique (format séparé par des virgules).                 | `3485$3A,3485$3B`             |
-| `app.groupids`                 | Liste des identifiants de groupe (format séparé par des virgules).                                  | `[]`                          |
+| Propriété                     | Description                                                                                  | Exemple                       |
+|-------------------------------|----------------------------------------------------------------------------------------------|-------------------------------|
+| `app.classaafids`              | Liste des identifiants d'une classe spécifique (format séparé par des virgules sans espace). | `bddb0a72-ea8b-4774-8114-d8bc1adc65ac,b3930c71-d0e9-4ddf-b88a-c41bbd649375`             |
 
 ### Configuration du serveur de messagerie
 
-| Propriété                           | Description                                                                                      | Exemple                                  |
-|-------------------------------------|--------------------------------------------------------------------------------------------------|------------------------------------------|
-| `quarkus.mailer.from`               | L'adresse e-mail utilisée comme expéditeur pour l'envoi des e-mails.                              | `laurent.cgi@lyceeconnecte.fr`           |
-| `quarkus.mailer.host`               | L'adresse du serveur SMTP utilisé pour envoyer des e-mails.                                       | `mx.lyceeconnecte.fr`                    |
-| `quarkus.mailer.port`               | Le port utilisé pour la connexion au serveur SMTP.                                                | `587`                                    |
-| `quarkus.mailer.tls`                | Indique si TLS est activé (vrai/faux).                                                            | `false`                                  |
-| `quarkus.mailer.start-tls`          | Définit si le TLS est requis pour la connexion au serveur SMTP.                                   | `REQUIRED`                               |
-| `quarkus.mailer.username`           | Le nom d'utilisateur pour l'authentification SMTP.                                                | `laurent.cgi@lyceeconnecte.fr`           |
-| `quarkus.mailer.password`           | Le mot de passe associé à l'utilisateur pour l'authentification SMTP.                             | `B0_N0uv3113Aqu!ta!n32024`               |
+| Propriété                           | Description                                                                                      | Exemple                        |
+|-------------------------------------|--------------------------------------------------------------------------------------------------|--------------------------------|
+| `quarkus.mailer.from`               | L'adresse e-mail utilisée comme expéditeur pour l'envoi des e-mails.                              | `no-reply@swarm.fr` |
+| `quarkus.mailer.host`               | L'adresse du serveur SMTP utilisé pour envoyer des e-mails.                                       | `mx.lyceeconnecte.fr`          |
+| `quarkus.mailer.port`               | Le port utilisé pour la connexion au serveur SMTP.                                                | `587`                          |
+| `quarkus.mailer.tls`                | Indique si TLS est activé (vrai/faux).                                                            | `false`                        |
+| `quarkus.mailer.start-tls`          | Définit si le TLS est requis pour la connexion au serveur SMTP.                                   | `REQUIRED`                     |
+| `quarkus.mailer.username`           | Le nom d'utilisateur pour l'authentification SMTP.                                                | `no-reply@swarm.fr`            |
+| `quarkus.mailer.password`           | Le mot de passe associé à l'utilisateur pour l'authentification SMTP.                             | `password`                     |
 
 ### Autres paramètres
 
