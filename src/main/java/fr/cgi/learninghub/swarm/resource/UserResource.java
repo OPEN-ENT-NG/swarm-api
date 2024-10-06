@@ -5,6 +5,7 @@ import fr.cgi.learninghub.swarm.model.User;
 import fr.cgi.learninghub.swarm.service.UserEntService;
 import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Uni;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -25,7 +26,7 @@ import java.util.List;
 
 @Path("/users")
 @Produces(MediaType.APPLICATION_JSON)
-@Authenticated
+@RolesAllowed("manager")
 @Tag(name = "UserResource", description = "This API is used to manage users information")
 @OpenAPIDefinition(
     info = @Info(

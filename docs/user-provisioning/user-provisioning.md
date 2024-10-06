@@ -10,6 +10,8 @@ Create User
 
 ![user-provisioning](/docs/user-provisioning/assets/user-provisioning1.png)
 
+Add "manager" role from "console" client in order to make use of API
+
 Getting user name or its attributes is fetched via JWT 
 
 Dépendance à ajouter

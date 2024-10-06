@@ -12,6 +12,7 @@ import fr.cgi.learninghub.swarm.service.ServiceService;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Uni;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -32,7 +33,7 @@ import java.util.List;
 @Path("/services")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-@Authenticated
+@RolesAllowed("manager")
 @Tag(name = "ServiceResource", description = "This API is used to manage service entities")
 @OpenAPIDefinition(
         info = @Info(

@@ -23,15 +23,28 @@ Pour pouvoir utiliser le repository privé de CGI learning hub, il faut ajouter 
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
                   http://maven.apache.org/xsd/settings-1.0.0.xsd">                                                                                   <servers>
+  <servers>
     <server>
-        <id>nexus-snapshots</id>
-        <username>${NEXUS_USERNAME}</username>
-        <password>${NEXUS_PASSWD}</password>                                                                                                         </server>
+      <id>nexus-snapshots</id>
+      <username>${NEXUS_USERNAME}</username>
+      <password>${NEXUS_PASSWD}</password>
+    </server>
     <server>
-        <id>nexus-releases</id>
-        <username>${NEXUS_USERNAME}</username>
-        <password>${NEXUS_PASSWD}</password>
-    </server>                                                                                                                                    </servers>
+      <id>nexus-releases</id>
+      <username>${NEXUS_USERNAME}</username>
+      <password>${NEXUS_PASSWD}</password>
+    </server>
+    <server>
+      <id>hub-snapshots</id>
+      <username>${NEXUS_USERNAME}</username>
+      <password>${NEXUS_PASSWD}</password>
+    </server>
+    <server>
+      <id>hub-releases</id>
+      <username>${NEXUS_USERNAME}</username>
+      <password>${NEXUS_PASSWD}</password>
+    </server>
+  </servers>
 </settings>                                                                                                                                                     
 ```
 
@@ -56,6 +69,23 @@ If you want to log out you must clear the cookies and do :
 ```shell script
 ./mvnw clean compile quarkus:dev
 ```
+
+You can also authenticate yourself :
+
+```bash
+# Example
+curl -X POST \
+-H "Content-Type: application/x-www-form-urlencoded" \
+-d "client_id=console" \
+-d "client_secret=A48tbgcY9VyKxuS5OrhMR1sWl5UJCIzS" \
+-d "username=e77e6d72-c7c1-4f51-ba1d-dbaa81abec9d" \
+-d "password=password" \
+-d "scope=openid" \
+-d "grant_type=password" \
+"http://localhost:9001/realms/swarm/protocol/openid-connect/token"
+```
+
+Use access_token for Authorize button
 
 ### Use ENT API
 
@@ -137,6 +167,18 @@ e77e6d72-c7c1-4f51-ba1d-dbaa81abec9d // password
 # obsolète 
 user.dev // password
 ```
+
+#### MAJ config realm.json Keycloak
+
+WIP export with user KO
+
+Pour mettre à jour le realm :
+
+Depuis le container keycloak :
+```bash
+ /opt/keycloak/bin/kc.sh export --dir <import-target> --users realm_file --realm swarm
+```
+
 
 ## Add Debug for Java with vscode
 

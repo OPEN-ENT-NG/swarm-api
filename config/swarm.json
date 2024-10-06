@@ -86,7 +86,17 @@
       }
     ],
     "client": {
-      "console": [],
+      "console": [
+        {
+          "id": "e783a821-e118-447b-b9c6-9fa90290549f",
+          "name": "manager",
+          "description": "",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "d36487f1-bcd6-4772-a660-1c7b4c382d93",
+          "attributes": {}
+        }
+      ],
       "realm-management": [
         {
           "id": "b6d1d6da-1f16-4c4e-8547-e7f7e673b04f",
@@ -477,6 +487,9 @@
       "realmRoles": [
         "default-roles-swarm"
       ],
+      "clientRoles" : {
+        "console" : [ "manager" ]
+      },
       "notBefore": 0,
       "groups": []
     },
@@ -505,6 +518,9 @@
       "realmRoles": [
         "default-roles-swarm"
       ],
+      "clientRoles" : {
+        "console" : [ "manager" ]
+      },
       "notBefore": 0,
       "groups": []
     },
