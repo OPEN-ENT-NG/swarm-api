@@ -19,7 +19,7 @@ public class MailService {
 
     public Uni<Void> send(MailBody mailBody) {
         return mailer.send(
-                Mail.withText(mailBody.getTo(), mailBody.getSubject(), mailBody.getContent())
+                Mail.withHtml(mailBody.getTo(), mailBody.getSubject(), mailBody.getContent())
         ).onFailure()
                 .invoke(e -> log.error(String.format("[SwarmApi@%s::send] Failed send mail : %s", this.getClass().getSimpleName(), e.getMessage())));
     }

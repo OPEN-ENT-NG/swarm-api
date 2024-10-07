@@ -5,17 +5,20 @@ import fr.cgi.learning.hub.swarm.common.enums.PathType;
 import fr.cgi.learning.hub.swarm.common.enums.State;
 import fr.cgi.learning.hub.swarm.common.enums.Type;
 import fr.cgi.learninghub.swarm.config.AppConfig;
+import fr.cgi.learninghub.swarm.constants.Prestashop;
 import fr.cgi.learninghub.swarm.core.enums.Order;
 import fr.cgi.learninghub.swarm.exception.*;
 import fr.cgi.learninghub.swarm.model.*;
 import fr.cgi.learninghub.swarm.repository.ServiceRepository;
+import fr.cgi.learninghub.swarm.utils.DateUtils;
+import io.quarkus.qute.Template;
+import io.quarkus.qute.TemplateInstance;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -38,6 +41,8 @@ public class ServiceService {
     MailService mailService;
     @Inject
     AppConfig appConfig;
+    @Inject
+    Template DistributeMailTemplate;
 
     // Functions
 
@@ -190,16 +195,30 @@ public class ServiceService {
 
     private MailBody createMailBody(Service service) {
         String subject = "Notification déploiement service";
-        String content = String.format(
-                "Bonjour %s %s,\n\nVous êtes notifié à propos du service suivant: %s\nDate: %s\n\nEmail: %s\n",
-                service.getFirstName(), service.getLastName(), service.getServiceName(), LocalDate.now(), service.getMail()
-        );
+        String servicePath = String.format("%s%s", appConfig.getHost(), service.getServiceName());
+
+        TemplateInstance template = DistributeMailTemplate
+                .data("serviceType", service.getType().getValue())
+                .data("serviceUrl", servicePath)
+                .data("serviceDeletionDate", DateUtils.formatDate(service.getDeletionDate()));
+
+        // Ajoute les données spécifiques à PrestaShop uniquement si le type de service est PrestaShop
+        if (service.getType().equals(Type.PRESTASHOP)) {
+            String serviceAdminPath = String.format("%s%s/%s", appConfig.getHost(), service.getServiceName(), Prestashop.ADMIN_PANEL);
+            template = template
+                    .data("serviceAdminUrl", serviceAdminPath)
+                    .data("serviceUser", service.getAdminUser())
+                    .data("servicePassword", service.getAdminPassword());
+        }
+
+        String content = template.render();
 
         return new MailBody()
                 .setTo(service.getMail())
                 .setSubject(subject)
                 .setContent(content);
     }
+
 
     private Uni<Void> sendEmail(MailBody mailBody) {
         return mailService.send(mailBody)

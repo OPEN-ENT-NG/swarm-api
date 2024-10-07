@@ -1,0 +1,27 @@
+<span>Bonjour,</span>
+
+<p>Un site a été créé pour vous, le site est accessible à l'URL suivante :</p>
+
+{#if serviceType == 'WORDPRESS'}
+    <div class="service">
+        <strong>WordPress :</strong> <a href="{serviceUrl}">{serviceUrl}</a> - Date de suppression : {serviceDeletionDate}.
+    </div>
+{/if}
+
+{#if serviceType == 'PRESTASHOP'}
+    <div class="service">
+        <strong>PrestaShop :</strong> <a href="{serviceUrl}">{serviceUrl}</a> - Date de suppression : {serviceDeletionDate}.
+    </div>
+{/if}
+
+{#if serviceType == 'PRESTASHOP'}
+    <div class="service-account">
+        Identifiant : {serviceUser}
+        Mot de passe : {servicePassword}
+        Lien d'administration: {serviceAdminUrl}
+    </div>
+{/if}
+
+<p>Vous serez l'administrateur du site, vous aurez donc la possibilité de le modifier à votre guise.</p>
+
+<footer>Cordialement.</footer>
