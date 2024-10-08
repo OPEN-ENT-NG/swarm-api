@@ -93,10 +93,11 @@ public class ServiceService {
 
     private Uni<Service> createService(Service service) {
         return serviceRepository.findUserService(service)
-                .onItem()
-                .ifNull()
-                .switchTo(serviceRepository.persistAndFlush(service));
+                .flatMap(foundService -> foundService == null
+                        ? serviceRepository.persistAndFlush(service)
+                        : Uni.createFrom().nullItem());
     }
+
 
     private Uni<List<Service>> patchServicesName(List<Service> services) {
         return Multi.createFrom().iterable(services)
