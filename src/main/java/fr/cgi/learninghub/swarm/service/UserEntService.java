@@ -51,7 +51,7 @@ public class UserEntService {
         log.error("AppConfig Mail Domain: " + appConfig.getMailDomain());
         log.error("AppConfig Host: " + appConfig.getHost());
         return fetchMyUserInfo()
-                .onItem().invoke(userInfos -> log.error("Fetched user structures information: " + userInfos.getStructures()))
+                .onItem().invoke(userInfos -> log.error("Fetched user structures information: " + userInfos.getStructuresIds()))
                 .onFailure().invoke(err -> log.error("Error fetching user info: " + err.getMessage()))
 
                 .chain(userInfos -> getClassesByStructures(userInfos.getStructuresIds()))
