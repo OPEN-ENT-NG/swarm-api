@@ -5,11 +5,13 @@ import fr.cgi.learninghub.swarm.clients.EntDirectoryClient;
 import fr.cgi.learninghub.swarm.config.AppConfig;
 import fr.cgi.learninghub.swarm.core.enums.Profile;
 import fr.cgi.learninghub.swarm.exception.ENTGetUsersInfosException;
+import fr.cgi.learninghub.swarm.exception.NoClassesProvidedException;
 import fr.cgi.learninghub.swarm.model.ClassInfos;
 import fr.cgi.learninghub.swarm.model.ResponseListClasses;
 import fr.cgi.learninghub.swarm.model.User;
 import fr.cgi.learninghub.swarm.model.UserInfos;
 import fr.cgi.learninghub.swarm.repository.ServiceRepository;
+import io.quarkus.oidc.UserInfo;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -39,6 +41,8 @@ public class UserEntService {
 
     @Inject
     JsonWebToken jwt;
+    @Inject
+    UserInfo userInfo;
 
     public Uni<List<User>> listGlobalUsersInfo() {
         log.error("Starting listGlobalUsersInfo method");
@@ -47,7 +51,7 @@ public class UserEntService {
         log.error("AppConfig Mail Domain: " + appConfig.getMailDomain());
         log.error("AppConfig Host: " + appConfig.getHost());
         return fetchMyUserInfo()
-                .onItem().invoke(userInfos -> log.error("Fetched user information: " + userInfos))
+                .onItem().invoke(userInfos -> log.error("Fetched user structures information: " + userInfos.getStructures()))
                 .onFailure().invoke(err -> log.error("Error fetching user info: " + err.getMessage()))
 
                 .chain(userInfos -> getClassesByStructures(userInfos.getStructuresIds()))
@@ -80,8 +84,13 @@ public class UserEntService {
 
     // Étape pour récupérer tous les utilisateurs à partir des classes (sans grouper par école)
     private Uni<List<User>> getUsersByClasses(List<ClassInfos> classes) {
-        Map<String, User> userMap = new HashMap<>();
 
+        if (classes.isEmpty()) {
+            log.error(String.format("[SwarmApi@%s::getUsersByClasses] Failed to get classes for user provided", this.getClass().getSimpleName()));
+            return Uni.createFrom().failure(new NoClassesProvidedException()); // Lancer une exception
+        }
+
+        Map<String, User> userMap = new HashMap<>();
         // Crée une liste d'opérations asynchrones pour chaque classe
         List<Uni<List<User>>> userFetchUnis = classes.stream()
                 .map(this::fetchUsersByClass) // Récupère les utilisateurs pour chaque classe
