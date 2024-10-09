@@ -41,15 +41,33 @@ public class UserEntService {
     JsonWebToken jwt;
 
     public Uni<List<User>> listGlobalUsersInfo() {
+        log.error("Starting listGlobalUsersInfo method");
+        log.error("AppConfig Class IDs: " + appConfig.getClassIds());
+        log.error("AppConfig Group IDs: " + appConfig.getGroupIds());
+        log.error("AppConfig Mail Domain: " + appConfig.getMailDomain());
+        log.error("AppConfig Host: " + appConfig.getHost());
         return fetchMyUserInfo()
+                .onItem().invoke(userInfos -> log.error("Fetched user information: " + userInfos))
+                .onFailure().invoke(err -> log.error("Error fetching user info: " + err.getMessage()))
+
                 .chain(userInfos -> getClassesByStructures(userInfos.getStructuresIds()))
-                .chain(this::filterClassesByConfig) 
-                .chain(this::getUsersByClasses) 
+                .onItem().invoke(classes -> log.error("Fetched classes by structures: " + classes))
+                .onFailure().invoke(err -> log.error("Error fetching classes by structures: " + err.getMessage()))
+
+                .chain(this::filterClassesByConfig)
+                .onItem().invoke(filteredClasses -> log.error("Filtered classes by config: " + filteredClasses))
+                .onFailure().invoke(err -> log.error("Error filtering classes by config: " + err.getMessage()))
+
+                .chain(this::getUsersByClasses)
+                .onItem().invoke(users -> log.error("Fetched users by classes: " + users))
+                .onFailure().invoke(err -> log.error("Error fetching users by classes: " + err.getMessage()))
+
                 .onFailure().recoverWithUni(err -> {
                     log.error("Failed to fetch users: " + err.getMessage());
                     return Uni.createFrom().failure(new ENTGetUsersInfosException());
                 });
     }
+
 
     // 1. Étape pour filtrer les classes par la configuration (appConfig)
     private Uni<List<ClassInfos>> filterClassesByConfig(List<ClassInfos> classes) {

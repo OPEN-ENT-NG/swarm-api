@@ -63,7 +63,7 @@ public class ServiceService {
                             return getServicesFromFilteredUsers(search, types, order, page, limit, students, filteredStudents, userInfos);
                         })
                         .onFailure().recoverWithUni(err -> {
-                            log.error(String.format("[SwarmApi@%s::listAllAndFilter] Failed to list users for UAIs %s : %s", this.getClass().getSimpleName(), userInfos.getStructuresIds(), err.getMessage()));
+                            log.error(String.format("[SwarmApi@%s::listAllAndFilter] Failed to list users for structure ids %s : %s", this.getClass().getSimpleName(), userInfos.getStructuresIds(), err.getMessage()));
                             return Uni.createFrom().failure(new ENTGetUsersInfosException());
                         }))
                 .onFailure().recoverWithUni(err -> {
