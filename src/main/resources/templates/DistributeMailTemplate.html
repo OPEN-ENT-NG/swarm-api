@@ -4,21 +4,22 @@
 
 {#if serviceType == 'WORDPRESS'}
     <div class="service">
-        <strong>WordPress :</strong> <a href="{serviceUrl}">{serviceUrl}</a> - Date de suppression : {serviceDeletionDate}.
+        <ul>
+            <li><strong>WordPress :</strong> <a href="{serviceUrl}">{serviceUrl}</a></li>
+            <li><strong>Date de suppression :</strong> {serviceDeletionDate}</li>
+        </ul>
     </div>
 {/if}
 
 {#if serviceType == 'PRESTASHOP'}
     <div class="service">
-        <strong>PrestaShop :</strong> <a href="{serviceUrl}">{serviceUrl}</a> - Date de suppression : {serviceDeletionDate}.
-    </div>
-{/if}
-
-{#if serviceType == 'PRESTASHOP'}
-    <div class="service-account">
-        Identifiant : {serviceUser}
-        Mot de passe : {servicePassword}
-        Lien d'administration: {serviceAdminUrl}
+        <ul>
+            <li><strong>PrestaShop :</strong> <a href="{serviceUrl}">{serviceUrl}</a></li>
+            <li><strong>Date de suppression :</strong> {serviceDeletionDate}</li>
+            <li><strong>Identifiant :</strong> {serviceUser}</li>
+            <li><strong>Mot de passe :</strong> {servicePassword}</li>
+            <li><strong>Lien d'administration :</strong> <a href="{serviceAdminUrl}">{serviceAdminUrl}</a></li>
+        </ul>
     </div>
 {/if}
 
