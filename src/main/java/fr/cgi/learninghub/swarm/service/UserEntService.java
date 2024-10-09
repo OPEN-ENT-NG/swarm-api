@@ -75,6 +75,7 @@ public class UserEntService {
 
     // 1. Étape pour filtrer les classes par la configuration (appConfig)
     private Uni<List<ClassInfos>> filterClassesByConfig(List<ClassInfos> classes) {
+        classes.forEach(classInfo -> log.error("Fetched class: " + classInfo.getId())); // Log de toutes les classes
         return Uni.createFrom().item(() ->
                 classes.stream()
                         .filter(userClass -> appConfig.getClassIds().contains(userClass.getId()))
