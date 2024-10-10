@@ -5,6 +5,7 @@ import fr.cgi.learninghub.swarm.clients.EntDirectoryClient;
 import fr.cgi.learninghub.swarm.config.AppConfig;
 import fr.cgi.learninghub.swarm.core.enums.Profile;
 import fr.cgi.learninghub.swarm.exception.ENTGetUsersInfosException;
+import fr.cgi.learninghub.swarm.exception.NoClassesProvidedException;
 import fr.cgi.learninghub.swarm.model.ClassInfos;
 import fr.cgi.learninghub.swarm.model.ResponseListClasses;
 import fr.cgi.learninghub.swarm.model.User;
@@ -43,8 +44,8 @@ public class UserEntService {
     public Uni<List<User>> listGlobalUsersInfo() {
         return fetchMyUserInfo()
                 .chain(userInfos -> getClassesByStructures(userInfos.getStructuresIds()))
-                .chain(this::filterClassesByConfig) 
-                .chain(this::getUsersByClasses) 
+                .chain(this::filterClassesByConfig)
+                .chain(this::getUsersByClasses)
                 .onFailure().recoverWithUni(err -> {
                     log.error("Failed to fetch users: " + err.getMessage());
                     return Uni.createFrom().failure(new ENTGetUsersInfosException());
@@ -62,13 +63,18 @@ public class UserEntService {
 
     // Étape pour récupérer tous les utilisateurs à partir des classes (sans grouper par école)
     private Uni<List<User>> getUsersByClasses(List<ClassInfos> classes) {
+
+        if (classes.isEmpty()) {
+            log.error(String.format("[SwarmApi@%s::getUsersByClasses] Failed to get classes for user provided", this.getClass().getSimpleName()));
+            return Uni.createFrom().failure(new NoClassesProvidedException()); // Lancer une exception
+        }
+
         Map<String, User> userMap = new HashMap<>();
 
         // Crée une liste d'opérations asynchrones pour chaque classe
         List<Uni<List<User>>> userFetchUnis = classes.stream()
                 .map(this::fetchUsersByClass) // Récupère les utilisateurs pour chaque classe
                 .collect(Collectors.toList());
-
         return Uni.combine().all().unis(userFetchUnis)
                 .with(userLists -> {
                     List<List<User>> listsOfUsers = (List<List<User>>) userLists;
@@ -101,19 +107,30 @@ public class UserEntService {
 
     // Étape pour récupérer les classes par structures
     private Uni<List<ClassInfos>> getClassesByStructures(List<String> structureIds) {
-        return entDirectoryClient.listClassesInStructuresByIds(structureIds)
-                .onItem().transform(response -> {
-                    try {
-                        ObjectMapper mapper = new ObjectMapper();
-                        ResponseListClasses result = mapper.readValue(response, ResponseListClasses.class);
-                        return result.getResult().values().stream().collect(Collectors.toList());
-                    } catch (Exception e) {
-                        log.error(String.format("[SwarmApi@%s::getClassesByStructures] Failed to parse response for structures %s : %s", this.getClass().getSimpleName(), structureIds, e.getMessage()));
-                        throw new ENTGetUsersInfosException();
-                    }
-                })
+        // Créer une liste d'operations asynchrones pour chaque structureId
+        List<Uni<List<ClassInfos>>> classFetchUnis = structureIds.stream()
+                .map(structureId -> entDirectoryClient.listClassesInStructuresByIds(structureId)
+                        .onItem().transform(response -> {
+                            try {
+                                ObjectMapper mapper = new ObjectMapper();
+                                ResponseListClasses result = mapper.readValue(response, ResponseListClasses.class);
+                                return result.getResult().values().stream().collect(Collectors.toList());
+                            } catch (Exception e) {
+                                log.error(String.format("[SwarmApi@%s::getClassesByStructures] Failed to parse response for structure %s : %s", this.getClass().getSimpleName(), structureId, e.getMessage()));
+                                throw new ENTGetUsersInfosException();
+                            }
+                        })
+                        .onFailure().invoke(err -> log.error(String.format("[SwarmApi@%s::getClassesByStructures] Failed to list classes for structure %s : %s", this.getClass().getSimpleName(), structureId, err.getMessage())))
+                )
+                .collect(Collectors.toList());
+
+        // Combiner les résultats des appels asynchrones pour chaque structureId
+        return Uni.combine().all().unis(classFetchUnis)
+                .with(classLists -> classLists.stream()
+                        .flatMap(list -> ((List<ClassInfos>) list).stream())
+                        .collect(Collectors.toList()))
                 .onFailure().recoverWithUni(err -> {
-                    log.error(String.format("[SwarmApi@%s::getClassesByStructures] Failed to list classes for structures %s : %s", this.getClass().getSimpleName(), structureIds, err.getMessage()));
+                    log.error(String.format("[SwarmApi@%s::getClassesByStructures] Failed to retrieve classes for structures %s : %s", this.getClass().getSimpleName(), structureIds, err.getMessage()));
                     return Uni.createFrom().failure(new ENTGetUsersInfosException());
                 });
     }

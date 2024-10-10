@@ -121,6 +121,7 @@ public class ServiceService {
                                 .filter(Objects::nonNull)
                                 .map(ClassInfos::getId)
                                 .anyMatch(classIds::contains)))
+                .distinct()
                 .collect(Collectors.toList());
         return Uni.createFrom().item(filteredUsers);
     }
@@ -301,21 +302,20 @@ public class ServiceService {
         List<Type> types = createServiceBody.getTypes();
 
         users.forEach(user -> types.forEach(type -> {
-            for (ClassInfos classInfo : user.getClasses()) {
-                Service service = new Service();
-                service.setUserId(user.getId())
-                        .setFirstName(user.getFirstName())
-                        .setLastName(user.getLastName())
-                        .setLogin(user.getLogin())
-                        .setServiceName(PathType.getValue(type))
-                        .setStructureId(user.getStructure())
-                        .setType(type)
-                        .setMail(user.getMail())
-                        .setClassId(classInfo.getId())
-                        .setDeletionDate(createServiceBody.getDeletionDate())
-                        .setState(State.SCHEDULED);
-                services.add(service);
-            }
+            Service service = new Service();
+            service.setUserId(user.getId())
+                    .setFirstName(user.getFirstName())
+                    .setLastName(user.getLastName())
+                    .setLogin(user.getLogin())
+                    .setServiceName(PathType.getValue(type))
+                    .setStructureId(user.getStructure())
+                    .setType(type)
+                    .setMail(user.getMail())
+                    .setClassId(user.getClasses().getFirst().getId()) // Si élève a 2 classes, on prend la premiere. (NORMALEMENT CAS IMPOSSIBLE MULTI-CLASS)
+                    .setDeletionDate(createServiceBody.getDeletionDate())
+                    .setState(State.SCHEDULED);
+            services.add(service);
+
         }));
 
         return Uni.createFrom().item(services);

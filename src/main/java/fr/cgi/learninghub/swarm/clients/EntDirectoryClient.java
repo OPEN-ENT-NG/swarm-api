@@ -34,7 +34,7 @@ public interface EntDirectoryClient {
 
     @GET
     @Path("/api/classes")
-    Uni<String> listClassesInStructuresByIds(@QueryParam("id") List<String> structureIds);
+    Uni<String> listClassesInStructuresByIds(@QueryParam("id") String structureId);
 
     @GET
     @Path("/class/{classId}/users")
