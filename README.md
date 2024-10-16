@@ -1,4 +1,11 @@
-# swarm-api
+# À propos de l'application Swarm API
+* Licence : [AGPL v3](http://www.gnu.org/licenses/agpl.txt) - Copyright Région Nouvelle Aquitaine
+* Propriétaire(s) : CGI
+* Mainteneur(s) : CGI
+* Financeur(s) : Région Nouvelle Aquitaine
+* Description : Module permettant le déploiement de sites Wordpress et Prestashop à la demande.
+
+## Introduction
 
 This project uses Quarkus, the Supersonic Subatomic Java Framework.
 
