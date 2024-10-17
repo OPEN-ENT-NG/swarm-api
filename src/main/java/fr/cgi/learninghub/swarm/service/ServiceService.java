@@ -300,6 +300,13 @@ public class ServiceService {
 
         users.forEach(user -> types.forEach(type -> {
             Service service = new Service();
+
+            String classId = Optional.ofNullable(user.getClasses())
+                    .filter(classes -> !classes.isEmpty())
+                    .map(List::getFirst) // Si l'élève a plusieurs classes, on prend la premiere. (NORMALEMENT CAS IMPOSSIBLE MULTI-CLASS)
+                    .map(ClassInfos::getId)
+                    .orElse(null);
+
             service.setUserId(user.getId())
                     .setFirstName(user.getFirstName())
                     .setLastName(user.getLastName())
@@ -308,7 +315,7 @@ public class ServiceService {
                     .setStructureId(user.getStructure())
                     .setType(type)
                     .setMail(user.getMail())
-                    .setClassId(user.getClasses().getFirst().getId()) // Si élève a 2 classes, on prend la premiere. (NORMALEMENT CAS IMPOSSIBLE MULTI-CLASS)
+                    .setClassId(classId)
                     .setDeletionDate(createServiceBody.getDeletionDate())
                     .setState(State.SCHEDULED);
             services.add(service);

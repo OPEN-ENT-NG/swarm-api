@@ -8,11 +8,8 @@ import java.util.List;
 @ApplicationScoped
 public class AppConfig {
 
-    @ConfigProperty(name = "app.classaafids")
+    @ConfigProperty(name = "app.classids")
     List<String> classIds;
-    
-    @ConfigProperty(name = "app.groupids")
-    List<String> groupIds;
 
     @ConfigProperty(name = "mail.domain")
     String mailDomain;
@@ -22,10 +19,6 @@ public class AppConfig {
 
     public List<String> getClassIds() {
         return classIds;
-    }
-
-    public List<String> getGroupIds() {
-        return groupIds;
     }
 
     public String getMailDomain() {

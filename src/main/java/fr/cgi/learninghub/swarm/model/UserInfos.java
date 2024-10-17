@@ -33,6 +33,16 @@ public class UserInfos {
     @JsonProperty("structureNodes")
     private List<StructureInfos> structures;
 
+    @Schema(description = "Unique login of the user",
+            example = "john.doe")
+    @JsonProperty("login")
+    private String login;
+
+    @Schema(description = "String describing the mail of the user",
+            example = "mail@ng1.support-ent.fr")
+    @JsonProperty("email")
+    private String email;
+
     // Getter
 
     public String getId() {
@@ -49,6 +59,14 @@ public class UserInfos {
 
     public List<StructureInfos> getStructures() {
         return structures;
+    }
+
+    public String getLogin() {
+        return login;
+    }
+
+    public String getEmail() {
+        return email;
     }
 
     // Setter
@@ -70,6 +88,16 @@ public class UserInfos {
 
     public UserInfos setStructures(List<StructureInfos> structures) {
         this.structures = structures;
+        return this;
+    }
+
+    public UserInfos getLogin(String login) {
+        this.login = login;
+        return this;
+    }
+
+    public UserInfos getEmail(String email) {
+        this.email = email;
         return this;
     }
 

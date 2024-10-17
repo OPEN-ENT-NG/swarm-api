@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import fr.cgi.learninghub.swarm.core.enums.Profile;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -53,6 +54,20 @@ public class User {
     @JsonProperty("classes")
     private List<ClassInfos> classes;
 
+    // Constructor
+
+    public User() {}
+
+    public User(UserInfos userInfos) {
+        setId(userInfos.getId());
+        setFirstName(userInfos.getFirstName());
+        setLastName(userInfos.getLastName());
+        setLogin(userInfos.getLogin());
+        setMail(userInfos.getEmail());
+        setStructure("");
+        setClassesInfos(new ArrayList<>());
+    }
+
     // Getter
 
     public String getId() {
@@ -69,6 +84,10 @@ public class User {
 
     public String getLogin() {
         return login;
+    }
+
+    public String getMail() {
+        return mail;
     }
 
     public Profile getProfile() {
@@ -105,6 +124,12 @@ public class User {
         return this;
     }
 
+
+    public User setMail(String mail) {
+        this.mail = mail;
+        return this;
+    }
+
     public User setProfile(String profile) {
         this.profile = Profile.getProfile(profile.toUpperCase());
         return this;
@@ -127,15 +152,5 @@ public class User {
     public User setClassesInfos(List<ClassInfos> classes) {
         this.classes = classes;
         return this;
-    }
-
-
-    public User setMail(String mail) {
-        this.mail = mail;
-        return this;
-    }
-
-    public String getMail() {
-        return mail;
     }
 }

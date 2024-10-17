@@ -10,7 +10,6 @@ import fr.cgi.learninghub.swarm.model.ClassInfos;
 import fr.cgi.learninghub.swarm.model.ResponseListClasses;
 import fr.cgi.learninghub.swarm.model.User;
 import fr.cgi.learninghub.swarm.model.UserInfos;
-import fr.cgi.learninghub.swarm.repository.ServiceRepository;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -32,9 +31,6 @@ public class UserEntService {
     AppConfig appConfig;
 
     @Inject
-    ServiceRepository serviceRepository;
-
-    @Inject
     @RestClient
     EntDirectoryClient entDirectoryClient;
 
@@ -43,11 +39,22 @@ public class UserEntService {
 
     public Uni<List<User>> listGlobalUsersInfo() {
         return fetchMyUserInfo()
-                .chain(userInfos -> getClassesByStructures(userInfos.getStructuresIds()))
+            .chain(this::retrieveGlobalUsersInfoAndAddMe)
+            .onFailure().recoverWithUni(err -> {
+                String errorMessage = "[SwarmApi@%s::listGlobalUsersInfo] Failed to fetch connected user infos : %s";
+                log.error(String.format(errorMessage, this.getClass().getSimpleName(), err.getMessage()));
+                return Uni.createFrom().failure(new ENTGetUsersInfosException());
+            });
+    }
+
+    public Uni<List<User>> retrieveGlobalUsersInfoAndAddMe(UserInfos userInfos) {
+        return getClassesByStructures(userInfos.getStructuresIds())
                 .chain(this::filterClassesByConfig)
                 .chain(this::getUsersByClasses)
+                .chain(users -> this.addMeAsServiceUser(users, userInfos))
                 .onFailure().recoverWithUni(err -> {
-                    log.error("Failed to fetch users: " + err.getMessage());
+                    String errorMessage = "[SwarmApi@%s::retrieveGlobalUsersInfoAndAddMe] Failed to list all user infos for connected user : %s";
+                    log.error(String.format(errorMessage, this.getClass().getSimpleName(), err.getMessage()));
                     return Uni.createFrom().failure(new ENTGetUsersInfosException());
                 });
     }
@@ -65,7 +72,8 @@ public class UserEntService {
     private Uni<List<User>> getUsersByClasses(List<ClassInfos> classes) {
 
         if (classes.isEmpty()) {
-            log.error(String.format("[SwarmApi@%s::getUsersByClasses] Failed to get classes for user provided", this.getClass().getSimpleName()));
+            String errorMessage = "[SwarmApi@%s::getUsersByClasses] No classes provided to get users from";
+            log.error(String.format(errorMessage, this.getClass().getSimpleName()));
             return Uni.createFrom().failure(new NoClassesProvidedException()); // Lancer une exception
         }
 
@@ -82,8 +90,7 @@ public class UserEntService {
                     listsOfUsers.stream()
                             .flatMap(Collection::stream) // Utilise une expression lambda à la place de List::stream
                             .forEach(user -> userMap.merge(user.getId(), user, (existingUser, newUser) -> {
-                                List<ClassInfos> newClasses = Stream.concat(existingUser.getClasses().stream(), newUser.getClasses().stream())
-                                        .toList();
+                                List<ClassInfos> newClasses = Stream.concat(existingUser.getClasses().stream(), newUser.getClasses().stream()).toList();
                                 existingUser.setClassesInfos(newClasses);
                                 return existingUser;
                             }));
@@ -116,11 +123,15 @@ public class UserEntService {
                                 ResponseListClasses result = mapper.readValue(response, ResponseListClasses.class);
                                 return result.getResult().values().stream().collect(Collectors.toList());
                             } catch (Exception e) {
-                                log.error(String.format("[SwarmApi@%s::getClassesByStructures] Failed to parse response for structure %s : %s", this.getClass().getSimpleName(), structureId, e.getMessage()));
+                                String errorMessage = "[SwarmApi@%s::getClassesByStructures] Failed to parse response for structure %s : %s";
+                                log.error(String.format(errorMessage, this.getClass().getSimpleName(), structureId, e.getMessage()));
                                 throw new ENTGetUsersInfosException();
                             }
                         })
-                        .onFailure().invoke(err -> log.error(String.format("[SwarmApi@%s::getClassesByStructures] Failed to list classes for structure %s : %s", this.getClass().getSimpleName(), structureId, err.getMessage())))
+                        .onFailure().invoke(err -> {
+                            String errorMessage = "[SwarmApi@%s::getClassesByStructures] Failed to list classes for structure %s : %s";
+                            log.error(String.format(errorMessage, this.getClass().getSimpleName(), structureId, err.getMessage()));
+                        })
                 )
                 .collect(Collectors.toList());
 
@@ -130,9 +141,15 @@ public class UserEntService {
                         .flatMap(list -> ((List<ClassInfos>) list).stream())
                         .collect(Collectors.toList()))
                 .onFailure().recoverWithUni(err -> {
-                    log.error(String.format("[SwarmApi@%s::getClassesByStructures] Failed to retrieve classes for structures %s : %s", this.getClass().getSimpleName(), structureIds, err.getMessage()));
+                    String errorMessage = "[SwarmApi@%s::getClassesByStructures] Failed to retrieve classes for structures %s : %s";
+                    log.error(String.format(errorMessage, this.getClass().getSimpleName(), structureIds, err.getMessage()));
                     return Uni.createFrom().failure(new ENTGetUsersInfosException());
                 });
+    }
+
+    private Uni<List<User>> addMeAsServiceUser(List<User> users, UserInfos userInfos) {
+        users.add(new User(userInfos));
+        return Uni.createFrom().item(users);
     }
 
 

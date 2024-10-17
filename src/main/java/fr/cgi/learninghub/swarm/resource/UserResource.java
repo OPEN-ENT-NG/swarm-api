@@ -3,7 +3,6 @@ package fr.cgi.learninghub.swarm.resource;
 import fr.cgi.learninghub.swarm.model.ResponseListUser;
 import fr.cgi.learninghub.swarm.model.User;
 import fr.cgi.learninghub.swarm.service.UserEntService;
-import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Uni;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
