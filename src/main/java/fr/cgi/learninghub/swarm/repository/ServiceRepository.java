@@ -68,7 +68,6 @@ public class ServiceRepository implements PanacheRepositoryBase<Service, String>
         return list("id IN ?1 AND structureId IN ?2", ids, structuresIds);
     }
 
-
     public Uni<Service> findUserService(Service service) {
         return Service.find("type = ?1 and userId = ?2 and classId = ?3", service.getType(), service.getUserId(), service.getClassId())
                 .firstResult();

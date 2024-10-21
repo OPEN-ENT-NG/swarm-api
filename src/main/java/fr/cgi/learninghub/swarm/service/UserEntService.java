@@ -93,7 +93,7 @@ public class UserEntService {
     }
 
 
-    // Étape pour récupérer les utilisateurs pour une classe donnée
+    // Étape pour récupérer les utilisateurs pour une classe et un profil donnés
     private Uni<List<User>> fetchUsersByClass(ClassInfos userClass) {
         return entDirectoryClient.getUsersByClass(userClass.getId(), Profile.STUDENT.getValue())
                 .onItem().transform(users -> users.stream()

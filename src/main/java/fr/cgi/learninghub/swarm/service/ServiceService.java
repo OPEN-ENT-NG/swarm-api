@@ -19,10 +19,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -49,27 +46,27 @@ public class ServiceService {
     public Uni<ResponseListService> listAllAndFilter(List<String> structures, List<String> classes,
                                                      String search, List<Type> types, Order order, int page, int limit) {
         return userEntService.fetchMyUserInfo()
-                .chain(userInfos -> userEntService.listGlobalUsersInfo()
-                        .chain(students -> {
-                            // Filtrage structures/classes
-                            List<User> filteredStudents = students;
-                            if (structures != null && !structures.isEmpty()) {
-                                filteredStudents = filteredStudents.stream().filter(student -> structures.contains(student.getStructure())).toList();
-                            }
-                            if (classes != null && !classes.isEmpty()) {
-                                filteredStudents = filteredStudents.stream().filter(student -> classes.stream().anyMatch(student.getClasses().stream().map(ClassInfos::getId).toList()::contains)).toList();
-                            }
+            .chain(userInfos -> userEntService.listGlobalUsersInfo()
+                .chain(students -> {
+                    // Filtrage structures/classes
+                    List<User> filteredStudents = students;
+                    if (structures != null && !structures.isEmpty()) {
+                        filteredStudents = filteredStudents.stream().filter(student -> structures.contains(student.getStructure())).toList();
+                    }
+                    if (classes != null && !classes.isEmpty()) {
+                        filteredStudents = filteredStudents.stream().filter(student -> classes.stream().anyMatch(student.getClasses().stream().map(ClassInfos::getId).toList()::contains)).toList();
+                    }
 
-                            return getServicesFromFilteredUsers(search, types, order, page, limit, students, filteredStudents, userInfos);
-                        })
-                        .onFailure().recoverWithUni(err -> {
-                            log.error(String.format("[SwarmApi@%s::listAllAndFilter] Failed to list users for UAIs %s : %s", this.getClass().getSimpleName(), userInfos.getStructuresIds(), err.getMessage()));
-                            return Uni.createFrom().failure(new ENTGetUsersInfosException());
-                        }))
+                    return getServicesFromFilteredUsers(search, types, order, page, limit, students, filteredStudents, userInfos);
+                })
                 .onFailure().recoverWithUni(err -> {
-                    log.error(String.format("[SwarmApi@%s::listAllAndFilter] Failed to get structures of connected user : %s", this.getClass().getSimpleName(), err.getMessage()));
-                    return Uni.createFrom().failure(new ENTGetStructuresException());
-                });
+                    log.error(String.format("[SwarmApi@%s::listAllAndFilter] Failed to list users for UAIs %s : %s", this.getClass().getSimpleName(), userInfos.getStructuresIds(), err.getMessage()));
+                    return Uni.createFrom().failure(new ENTGetUsersInfosException());
+                }))
+            .onFailure().recoverWithUni(err -> {
+                log.error(String.format("[SwarmApi@%s::listAllAndFilter] Failed to get structures of connected user : %s", this.getClass().getSimpleName(), err.getMessage()));
+                return Uni.createFrom().failure(new ENTGetStructuresException());
+            });
     }
 
     public Uni<List<Service>> create(CreateServiceBody createServiceBody) {
@@ -395,5 +392,4 @@ public class ServiceService {
 
         return URL_PATTERN.matcher(url).matches();
     }
-
 }
