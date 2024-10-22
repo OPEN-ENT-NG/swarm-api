@@ -8,7 +8,6 @@ import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.hibernate.reactive.panache.PanacheRepositoryBase;
 import io.quarkus.hibernate.reactive.panache.common.WithSession;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
-import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
 import io.quarkus.runtime.annotations.RegisterForReflection;
@@ -27,11 +26,11 @@ public class ServiceRepository implements PanacheRepositoryBase<Service, String>
 
     private static final Logger log = Logger.getLogger(ServiceRepository.class);
 
-    public Uni<List<Service>> listAllWithFilter(List<String> usersLogin, String search, List<Type> types, List<State> hiddenStates) {
+    public Uni<List<Service>> listAllWithFilter(List<String> usersIds, String search, List<Type> types, List<State> hiddenStates) {
         // Init query filtered by users ids and service types
-        String query = "SELECT DISTINCT s.login, s.firstName, s.lastName FROM Service s " +
-                "WHERE s.login IN :usersLogin AND s.type IN :types AND state NOT IN :hiddenStates ";
-        Parameters params = Parameters.with("usersLogin", usersLogin).and("types", types).and("hiddenStates", hiddenStates);
+        String query = "SELECT DISTINCT s.userId, s.firstName, s.lastName FROM Service s " +
+                "WHERE s.userId IN :usersIds AND s.type IN :types AND state NOT IN :hiddenStates ";
+        Parameters params = Parameters.with("usersIds", usersIds).and("types", types).and("hiddenStates", hiddenStates);
 
         // Search keywords in firstName and lastName columns
         if (!search.isEmpty()) {
@@ -46,26 +45,25 @@ public class ServiceRepository implements PanacheRepositoryBase<Service, String>
             query += ") ";
         }
 
-        query += "GROUP BY s.login, s.firstName, s.lastName";
-        return Service.find(query, params).project(Service.class).list();
-    }
-
-    public Uni<List<Service>> listAllWithFilterAndLimit(List<String> usersLogin, Order order, int page, int limit) {
-        // Sorting params
-        Sort.Direction direction = order.getDirection();
-        Sort sorting = Sort.by("lastName", direction).and("firstName", direction);
-
-        // Init query filtered by users ids and service types
-        String query = "SELECT s FROM Service s " +
-                "WHERE s.login IN :usersLogin";
-        Parameters params = Parameters.with("usersLogin", usersLogin);
-
-        return Service.find(query, sorting, params).page(Page.of((page - 1), limit)).list(); // Execute query and apply pagination
+        query += "GROUP BY s.userId, s.firstName, s.lastName";
+        return find(query, params).project(Service.class).list();
     }
 
 
     public Uni<List<Service>> listByIds(List<String> ids, List<String> structuresIds) {
         return list("id IN ?1 AND structureId IN ?2", ids, structuresIds);
+    }
+
+    public Uni<List<Service>> listByUserIdsAndSort(List<String> usersIds, Order order) {
+        // Sorting params
+        Sort.Direction direction = order.getDirection();
+        Sort sorting = Sort.by("lastName", direction).and("firstName", direction);
+
+        // Init query filtered by users ids and service types
+        String query = "userId IN :usersIds";
+        Parameters params = Parameters.with("usersIds", usersIds);
+
+        return find(query, sorting, params).list(); // Execute query and apply pagination
     }
 
     public Uni<Service> findUserService(Service service) {
@@ -120,5 +118,4 @@ public class ServiceRepository implements PanacheRepositoryBase<Service, String>
 
         return update(query, params);
     }
-
 }
