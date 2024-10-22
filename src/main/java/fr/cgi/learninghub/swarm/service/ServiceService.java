@@ -230,7 +230,7 @@ public class ServiceService {
     private Uni<ResponseListService> getServicesFromFilteredUsers(String search, List<Type> types, Order order, int page, int limit,
                                                                   List<User> students, List<User> filteredStudents, UserInfos userInfos) {
         List<String> usersIds = filteredStudents.stream().map(User::getId).toList();
-        List<State> hiddenStates = Arrays.asList(State.DEPLOYMENT_IN_ERROR, State.DELETION_SCHEDULED, State.DELETION_IN_PROGRESS, State.DELETION_IN_ERROR, State.RESET_IN_ERROR);
+        List<State> hiddenStates = Arrays.asList(State.DEPLOYMENT_IN_ERROR, State.DELETION_IN_ERROR, State.RESET_IN_ERROR);
 
         return serviceRepository.listAllWithFilter(usersIds, search, types, hiddenStates)
                 .chain(services -> {
