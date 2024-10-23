@@ -230,15 +230,14 @@ public class ServiceService {
     private Uni<ResponseListService> getServicesFromFilteredUsers(String search, List<Type> types, Order order, int page, int limit,
                                                                   List<User> students, List<User> filteredStudents, UserInfos userInfos) {
         List<String> usersIds = filteredStudents.stream().map(User::getId).toList();
-        List<State> hiddenStates = Arrays.asList(State.DEPLOYMENT_IN_ERROR, State.DELETION_IN_ERROR, State.RESET_IN_ERROR);
 
-        return serviceRepository.listAllWithFilter(usersIds, search, types, hiddenStates)
+        return serviceRepository.listAllWithFilter(usersIds, search, types)
                 .chain(services -> {
                     // Calculate total users
                     List<String> finalUsersIds = services.stream().map(Service::getUserId).distinct().toList();
                     int totalUsers = finalUsersIds.size();
 
-                    return setResponseListServiceGlobalInfos(students, userInfos, totalUsers, hiddenStates)
+                    return setResponseListServiceGlobalInfos(students, userInfos, totalUsers)
                             .chain(responseListServiceGlobalInfos -> buildResponseListService(order, page, limit, finalUsersIds, filteredStudents, userInfos, responseListServiceGlobalInfos))
                             .onFailure().recoverWithUni(err -> {
                                 String errorMessage = "[SwarmApi@%s::getServicesFromFilteredUsers] Failed to create responseListServiceGlobalInfos : %s";
@@ -329,22 +328,14 @@ public class ServiceService {
     }
 
 
-    private Uni<ResponseListServiceGlobalInfos> setResponseListServiceGlobalInfos(List<User> students, UserInfos userInfos, int totalUsers, List<State> hiddenStates) {
+    private Uni<ResponseListServiceGlobalInfos> setResponseListServiceGlobalInfos(List<User> students, UserInfos userInfos, int totalUsers) {
         return serviceRepository.listAll()
-                .chain(allServices -> filterServices(allServices, hiddenStates))
                 .chain(filteredServices -> filterStudentsByServices(students, filteredServices))
                 .chain(filteredStudents -> createResponse(filteredStudents, userInfos, totalUsers))
                 .onFailure().recoverWithUni(err -> {
                     log.error(String.format("[SwarmApi@%s::setResponseListServiceGlobalInfos] Failed to list all services from database: %s", this.getClass().getSimpleName(), err.getMessage()));
                     return Uni.createFrom().failure(new ListServiceException());
                 });
-    }
-
-    private Uni<List<Service>> filterServices(List<Service> allServices, List<State> hiddenStates) {
-        List<Service> filteredServices = allServices.stream()
-                .filter(service -> !hiddenStates.contains(service.getState()))
-                .toList();
-        return Uni.createFrom().item(filteredServices);
     }
 
     private Uni<List<User>> filterStudentsByServices(List<User> students, List<Service> filteredServices) {
