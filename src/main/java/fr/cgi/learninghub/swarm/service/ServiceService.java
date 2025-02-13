@@ -201,14 +201,11 @@ public class ServiceService {
                 .data("serviceUrl", servicePath)
                 .data("serviceDeletionDate", DateUtils.formatDate(service.getDeletionDate()));
 
-        // Ajoute les données spécifiques à PrestaShop uniquement si le type de service est PrestaShop
-        if (service.getType().equals(Type.PRESTASHOP)) {
-            String serviceAdminPath = String.format("%s%s/%s", appConfig.getHost(), service.getServiceName(), Prestashop.ADMIN_PANEL);
-            template = template
-                    .data("serviceAdminUrl", serviceAdminPath)
-                    .data("serviceUser", service.getAdminUser())
-                    .data("servicePassword", service.getAdminPassword());
-        }
+        String serviceAdminPath = String.format("%s%s/%s", appConfig.getHost(), service.getServiceName(), Prestashop.ADMIN_PANEL);
+        template = template
+                .data("serviceAdminUrl", serviceAdminPath)
+                .data("serviceUser", service.getAdminUser())
+                .data("servicePassword", service.getAdminPassword());
 
         String content = template.render();
 
