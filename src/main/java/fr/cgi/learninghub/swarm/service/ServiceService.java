@@ -6,6 +6,7 @@ import fr.cgi.learning.hub.swarm.common.enums.State;
 import fr.cgi.learning.hub.swarm.common.enums.Type;
 import fr.cgi.learninghub.swarm.config.AppConfig;
 import fr.cgi.learninghub.swarm.constants.Prestashop;
+import fr.cgi.learninghub.swarm.constants.Wordpress;
 import fr.cgi.learninghub.swarm.core.enums.Order;
 import fr.cgi.learninghub.swarm.exception.*;
 import fr.cgi.learninghub.swarm.model.*;
@@ -22,6 +23,8 @@ import org.jboss.logging.Logger;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static fr.cgi.learninghub.swarm.utils.StringUtils.capitalizeOnlyFirstLetter;
 
 @ApplicationScoped
 public class ServiceService {
@@ -197,11 +200,12 @@ public class ServiceService {
         String servicePath = String.format("%s%s", appConfig.getHost(), service.getServiceName());
 
         TemplateInstance template = DistributeMailTemplate
-                .data("serviceType", service.getType().getValue())
+                .data("serviceType", capitalizeOnlyFirstLetter(service.getType().getValue()))
                 .data("serviceUrl", servicePath)
                 .data("serviceDeletionDate", DateUtils.formatDate(service.getDeletionDate()));
 
-        String serviceAdminPath = String.format("%s%s/%s", appConfig.getHost(), service.getServiceName(), Prestashop.ADMIN_PANEL);
+        String suffix = service.getType() == Type.PRESTASHOP ? Prestashop.ADMIN_PANEL : Wordpress.ADMIN_PANEL;
+        String serviceAdminPath = String.format("%s%s/%s", appConfig.getHost(), service.getServiceName(), suffix);
         template = template
                 .data("serviceAdminUrl", serviceAdminPath)
                 .data("serviceUser", service.getAdminUser())

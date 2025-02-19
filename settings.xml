@@ -5,23 +5,23 @@
     <servers>
         <server>
             <id>nexus-snapshots</id>
-            <username>${NEXUS_USERNAME}</username>
-            <password>${NEXUS_PASSWD}</password>
+	        <username>jenkins</username>
+            <password>ZaGRnB3070e4</password>
         </server>
         <server>
             <id>nexus-releases</id>
-            <username>${NEXUS_USERNAME}</username>
-            <password>${NEXUS_PASSWD}</password>
+            <username>jenkins</username>
+            <password>ZaGRnB3070e4</password>
         </server>
         <server>
             <id>hub-snapshots</id>
-            <username>${NEXUS_USERNAME}</username>
-            <password>${NEXUS_PASSWD}</password>
+            <username>jenkins</username>
+            <password>ZaGRnB3070e4</password>
         </server>
         <server>
             <id>hub-releases</id>
-            <username>${NEXUS_USERNAME}</username>
-            <password>${NEXUS_PASSWD}</password>
+            <username>jenkins</username>
+            <password>ZaGRnB3070e4</password>
         </server>
     </servers>
 </settings>

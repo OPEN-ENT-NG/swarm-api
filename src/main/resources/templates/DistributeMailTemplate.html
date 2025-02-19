@@ -2,26 +2,15 @@
 
 <p>Un site a été créé pour vous, le site est accessible à l'URL suivante :</p>
 
-{#if serviceType == 'WORDPRESS'}
-    <div class="service">
-        <ul>
-            <li><strong>WordPress :</strong> <a href="{serviceUrl}">{serviceUrl}</a></li>
-            <li><strong>Date de suppression :</strong> {serviceDeletionDate}</li>
-        </ul>
-    </div>
-{/if}
-
-{#if serviceType == 'PRESTASHOP'}
-    <div class="service">
-        <ul>
-            <li><strong>PrestaShop :</strong> <a href="{serviceUrl}">{serviceUrl}</a></li>
-            <li><strong>Date de suppression :</strong> {serviceDeletionDate}</li>
-            <li><strong>Identifiant :</strong> {serviceUser}</li>
-            <li><strong>Mot de passe :</strong> {servicePassword}</li>
-            <li><strong>Lien d'administration :</strong> <a href="{serviceAdminUrl}">{serviceAdminUrl}</a></li>
-        </ul>
-    </div>
-{/if}
+<div class="service">
+    <ul>
+        <li><strong>{serviceType} :</strong> <a href="{serviceUrl}">{serviceUrl}</a></li>
+        <li><strong>Date de suppression :</strong> {serviceDeletionDate}</li>
+        <li><strong>Identifiant :</strong> {serviceUser}</li>
+        <li><strong>Mot de passe :</strong> {servicePassword}</li>
+        <li><strong>Lien d'administration :</strong> <a href="{serviceAdminUrl}">{serviceAdminUrl}</a></li>
+    </ul>
+</div>
 
 <p>Vous serez l'administrateur du site, vous aurez donc la possibilité de le modifier à votre guise.</p>
 
