@@ -9,3 +9,11 @@ VALUES ('a25cd679-b30b-4701-8c60-231cdc30cdf2', '2024-10-01 16:25:48.308', '2025
 
 INSERT INTO service (id, created, deletion_date, first_name, last_name, login, mail, service_name, state, structure_id, type, user_id, class_id, owner_admin_user, owner_admin_password)
 VALUES ('74f8bff8-913d-4666-9e76-2a85ccdf4144', '2024-10-01 16:25:48.308', '2024-10-18 01:00:00', 'Quentin', 'PERIE', 'quentin.perie', '49a29d79-6fa0-4d13-9764-7655cd467053@ng1.support-ent.fr', 'presta-49a29d79-6fa0-4d13-9764-7655cd467053', 'DELETION_IN_ERROR', '8df49fdb-faf4-4f7f-8425-414a6d5f25ff', 'PRESTASHOP', '49a29d79-6fa0-4d13-9764-7655cd467053', 'bddb0a72-ea8b-4774-8114-d8bc1adc65ac', 'qtest', '4kLK6ke3D6vLw5');
+
+
+
+INSERT INTO service (id, created, deletion_date, first_name, last_name, login, mail, service_name, state, structure_id, type, user_id, class_id, owner_admin_user, owner_admin_password)
+VALUES ('4d63f07e-dc00-4c59-87d8-8d93eedfe361', '2025-05-06 16:25:48.308', '2025-06-30 01:00:00', 'Kevin', 'LEROUX', 'kevin.leroux', 'kevin.leroux@gmail.com', 'wp-4d63f07e-dc00-4c59-87d8-8d93eedfe361', 'DEPLOYED', '5c04e497-cb43-4589-8332-16cc8a873920', 'WORDPRESS', '74f8bff8-913d-4666-9e76-2a85ccdf4144', '5945-1527695182589', 'loginWP', 'azerty123');
+
+INSERT INTO service (id, created, deletion_date, first_name, last_name, login, mail, service_name, state, structure_id, type, user_id, class_id, owner_admin_user, owner_admin_password)
+VALUES ('7b3f57d0-185f-4b70-985a-4e06e1d653f4', '2025-05-06 16:25:48.308', '2024-10-18 01:00:00', 'Kevin', 'LEROUX', 'kevin.leroux', 'kevin.leroux@gmail.com', 'presta-7b3f57d0-185f-4b70-985a-4e06e1d653f4', 'DEPLOYED', '5c04e497-cb43-4589-8332-16cc8a873920', 'PRESTASHOP', '74f8bff8-913d-4666-9e76-2a85ccdf4144', '5945-1527695182589', 'loginPS', 'azerty123');
