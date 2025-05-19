@@ -7,9 +7,8 @@ import java.util.List;
 
 @ApplicationScoped
 public class AppConfig {
-
-    @ConfigProperty(name = "app.classids")
-    List<String> classIds;
+    @ConfigProperty(name = "app.mefids")
+    List<String> mefIds;
 
     @ConfigProperty(name = "mail.domain")
     String mailDomain;
@@ -17,8 +16,8 @@ public class AppConfig {
     @ConfigProperty(name = "host")
     String host;
 
-    public List<String> getClassIds() {
-        return classIds;
+    public List<String> getMefIds() {
+        return mefIds;
     }
 
     public String getMailDomain() {

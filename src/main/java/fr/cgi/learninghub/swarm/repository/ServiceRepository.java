@@ -63,7 +63,7 @@ public class ServiceRepository implements PanacheRepositoryBase<Service, String>
         String query = "userId IN :usersIds";
         Parameters params = Parameters.with("usersIds", usersIds);
 
-        return find(query, sorting, params).list(); // Execute query and apply pagination
+        return find(query, sorting, params).list();
     }
 
     public Uni<Service> findUserService(Service service) {

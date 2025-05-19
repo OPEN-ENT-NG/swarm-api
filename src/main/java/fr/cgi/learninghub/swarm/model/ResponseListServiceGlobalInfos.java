@@ -25,7 +25,7 @@ public class ResponseListServiceGlobalInfos {
     @Schema(description = "List of all users possible for this response",
             example = "[{\"id\": \"john.doe\", \"firstName\": \"John\", \"lastName\": \"Doe\", \"structure\": \"42\", \"classes\": [{\"id\": \"42$1TES 2\", \"name\": \"1TES 2\"}]}]")
     @JsonProperty("users")
-    private List<UserInfos> users;
+    private List<User> users;
 
     // Getter
 
@@ -41,7 +41,7 @@ public class ResponseListServiceGlobalInfos {
         return classes;
     }
 
-    public List<UserInfos> getUsers() {
+    public List<User> getUsers() {
         return users;
     }
 
@@ -62,7 +62,7 @@ public class ResponseListServiceGlobalInfos {
         return this;
     }
 
-    public ResponseListServiceGlobalInfos setUsers(List<UserInfos> users) {
+    public ResponseListServiceGlobalInfos setUsers(List<User> users) {
         this.users = users;
         return this;
     }

@@ -15,7 +15,6 @@ import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
-import org.jboss.logging.Logger;
 
 import java.util.List;
 
@@ -33,8 +32,6 @@ import java.util.List;
 )
 public class StatisticsResource {
 
-    private static final Logger log = Logger.getLogger(StatisticsResource.class);
-
     @Inject
     StatisticsService statisticsService;
 
@@ -43,7 +40,9 @@ public class StatisticsResource {
     @APIResponse(responseCode = "500", description = "Internal server error")
     @APIResponse(responseCode = "200",
                 description = "List of statistics successfully retrieved and calculated",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseStatistics.class, type = SchemaType.ARRAY)))
+                content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = ResponseStatistics.class, type = SchemaType.ARRAY))
+                )
     public Uni<List<ResponseStatistics>> list() {
         return statisticsService.getAllStatistics();
     }

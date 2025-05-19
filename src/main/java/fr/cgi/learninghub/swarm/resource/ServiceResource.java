@@ -3,31 +3,28 @@ package fr.cgi.learninghub.swarm.resource;
 import fr.cgi.learning.hub.swarm.common.entities.Service;
 import fr.cgi.learning.hub.swarm.common.enums.Type;
 import fr.cgi.learning.hub.tracer.Trace;
-import fr.cgi.learninghub.swarm.constants.Traces;
+import fr.cgi.learninghub.swarm.core.constants.Traces;
 import fr.cgi.learninghub.swarm.core.enums.Order;
-import fr.cgi.learninghub.swarm.exception.CreateServiceBadRequestException;
 import fr.cgi.learninghub.swarm.model.*;
-import fr.cgi.learninghub.swarm.service.MailService;
 import fr.cgi.learninghub.swarm.service.ServiceService;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
-import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Uni;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.openapi.annotations.OpenAPIDefinition;
 import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
 import org.eclipse.microprofile.openapi.annotations.info.Info;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
-import org.jboss.logging.Logger;
 
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
 @Path("/services")
@@ -44,12 +41,17 @@ import java.util.List;
 )
 public class ServiceResource {
 
-    private static final Logger log = Logger.getLogger(ServiceResource.class);
-
     @Inject
     ServiceService serviceService;
 
     @GET
+    @Operation(summary = "List services", description = "List services according to given filters")
+    @APIResponse(responseCode = "500", description = "Internal server error")
+    @APIResponse(responseCode = "200",
+            description = "List of filtered services successfully retrieved",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = ResponseListService.class, type = SchemaType.ARRAY))
+            )
     public Uni<ResponseListService> list(@Parameter(description = "Filter structures") @QueryParam("structures") List<String> structures,
                                          @Parameter(description = "Filter classes") @QueryParam("classes") List<String> classes,
                                          @Parameter(description = "Search keywords") @QueryParam("search") String search,

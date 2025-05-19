@@ -13,7 +13,7 @@ VALUES ('74f8bff8-913d-4666-9e76-2a85ccdf4144', '2024-10-01 16:25:48.308', '2024
 
 
 INSERT INTO service (id, created, deletion_date, first_name, last_name, login, mail, service_name, state, structure_id, type, user_id, class_id, owner_admin_user, owner_admin_password)
-VALUES ('4d63f07e-dc00-4c59-87d8-8d93eedfe361', '2025-05-06 16:25:48.308', '2025-06-30 01:00:00', 'Kevin', 'LEROUX', 'kevin.leroux', 'kevin.leroux@gmail.com', 'wp-4d63f07e-dc00-4c59-87d8-8d93eedfe361', 'DEPLOYED', '5c04e497-cb43-4589-8332-16cc8a873920', 'WORDPRESS', '74f8bff8-913d-4666-9e76-2a85ccdf4144', '5945-1527695182589', 'loginWP', 'azerty123');
+VALUES ('4d63f07e-dc00-4c59-87d8-8d93eedfe361', '2025-05-06 16:25:48.308', '2025-06-30 01:00:00', 'Kevin', 'LEROUX', 'kevin.leroux', 'kevin.leroux@gmail.com', 'wp-4d63f07e-dc00-4c59-87d8-8d93eedfe361', 'DEPLOYED', '5c04e497-cb43-4589-8332-16cc8a873920', 'WORDPRESS', '74f8bff8-913d-4666-9e76-2a85ccdf4144', 'a5c434e7-7f49-4aec-bb18-67a17b8c7d9e', 'loginWP', 'azerty123');
 
 INSERT INTO service (id, created, deletion_date, first_name, last_name, login, mail, service_name, state, structure_id, type, user_id, class_id, owner_admin_user, owner_admin_password)
-VALUES ('7b3f57d0-185f-4b70-985a-4e06e1d653f4', '2025-05-06 16:25:48.308', '2024-10-18 01:00:00', 'Kevin', 'LEROUX', 'kevin.leroux', 'kevin.leroux@gmail.com', 'presta-7b3f57d0-185f-4b70-985a-4e06e1d653f4', 'DEPLOYED', '5c04e497-cb43-4589-8332-16cc8a873920', 'PRESTASHOP', '74f8bff8-913d-4666-9e76-2a85ccdf4144', '5945-1527695182589', 'loginPS', 'azerty123');
+VALUES ('7b3f57d0-185f-4b70-985a-4e06e1d653f4', '2025-05-06 16:25:48.308', '2024-10-18 01:00:00', 'Kevin', 'LEROUX', 'kevin.leroux', 'kevin.leroux@gmail.com', 'presta-7b3f57d0-185f-4b70-985a-4e06e1d653f4', 'DEPLOYED', '5c04e497-cb43-4589-8332-16cc8a873920', 'PRESTASHOP', '74f8bff8-913d-4666-9e76-2a85ccdf4144', 'a5c434e7-7f49-4aec-bb18-67a17b8c7d9e', 'loginPS', 'azerty123');

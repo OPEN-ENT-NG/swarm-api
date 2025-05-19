@@ -1,6 +1,5 @@
 package fr.cgi.learninghub.swarm.resource;
 
-import fr.cgi.learninghub.swarm.model.ResponseListUser;
 import fr.cgi.learninghub.swarm.model.User;
 import fr.cgi.learninghub.swarm.service.UserEntService;
 import io.smallrye.mutiny.Uni;
@@ -19,7 +18,6 @@ import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
-import org.jboss.logging.Logger;
 
 import java.util.List;
 
@@ -36,8 +34,6 @@ import java.util.List;
 )
 public class UserResource {
 
-    private static final Logger log = Logger.getLogger(UserResource.class);
-
     @Inject
     UserEntService userEntService;
 
@@ -46,7 +42,8 @@ public class UserResource {
     @APIResponse(responseCode = "200",
                 description = "List of users, their classes successfully retrieved",
                 content = @Content(mediaType = "application/json",
-                schema = @Schema(implementation = ResponseListUser.class, type = SchemaType.ARRAY)))
+                    schema = @Schema(implementation = User.class,type = SchemaType.ARRAY))
+                )
     public Uni<List<User>> list() {
         return userEntService.listGlobalUsersInfo();
     }

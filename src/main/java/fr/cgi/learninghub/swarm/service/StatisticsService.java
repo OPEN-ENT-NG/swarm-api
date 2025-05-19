@@ -30,8 +30,7 @@ public class StatisticsService {
     // Functions
 
     public Uni<List<ResponseStatistics>> getAllStatistics() {
-        return userEntService.fetchMyUserInfo()
-            .chain(userInfos -> userEntService.listGlobalUsersInfo())
+        return userEntService.listGlobalUsersInfo()
             .chain(students -> this.buildResponseStatisticsList(students.stream().map(User::getId).toList()))
             .onFailure().recoverWithUni(err -> {
                 String errorMessage = "[SwarmApi@%s::getAllStatistics] Failed to get statistics : %s";

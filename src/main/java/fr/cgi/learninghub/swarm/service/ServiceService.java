@@ -5,8 +5,8 @@ import fr.cgi.learning.hub.swarm.common.enums.PathType;
 import fr.cgi.learning.hub.swarm.common.enums.State;
 import fr.cgi.learning.hub.swarm.common.enums.Type;
 import fr.cgi.learninghub.swarm.config.AppConfig;
-import fr.cgi.learninghub.swarm.constants.Prestashop;
-import fr.cgi.learninghub.swarm.constants.Wordpress;
+import fr.cgi.learninghub.swarm.core.constants.Prestashop;
+import fr.cgi.learninghub.swarm.core.constants.Wordpress;
 import fr.cgi.learninghub.swarm.core.enums.Order;
 import fr.cgi.learninghub.swarm.exception.*;
 import fr.cgi.learninghub.swarm.model.*;
@@ -39,25 +39,31 @@ public class ServiceService {
 
     @Inject
     MailService mailService;
+
     @Inject
     AppConfig appConfig;
+
     @Inject
     Template DistributeMailTemplate;
 
     // Functions
 
-    public Uni<ResponseListService> listAllAndFilter(List<String> structures, List<String> classes,
+    public Uni<ResponseListService> listAllAndFilter(List<String> queryStructures, List<String> queryClasses,
                                                      String search, List<Type> types, Order order, int page, int limit) {
         return userEntService.fetchMyUserInfo()
             .chain(userInfos -> userEntService.listGlobalUsersInfo()
                 .chain(students -> {
                     // Filtrage structures/classes
                     List<User> filteredStudents = students;
-                    if (structures != null && !structures.isEmpty()) {
-                        filteredStudents = filteredStudents.stream().filter(student -> structures.contains(student.getStructure())).toList();
+                    if (queryStructures != null && !queryStructures.isEmpty()) {
+                        filteredStudents = filteredStudents.stream()
+                            .filter(student -> student.getStructures().stream().map(StructureInfos::getId).anyMatch(queryStructures::contains))
+                            .collect(Collectors.toList());
                     }
-                    if (classes != null && !classes.isEmpty()) {
-                        filteredStudents = filteredStudents.stream().filter(student -> classes.stream().anyMatch(student.getClasses().stream().map(ClassInfos::getId).toList()::contains)).toList();
+                    if (queryClasses != null && !queryClasses.isEmpty()) {
+                        filteredStudents = filteredStudents.stream()
+                            .filter(student -> student.getClasses().stream().map(ClassInfos::getId).anyMatch(queryClasses::contains))
+                            .collect(Collectors.toList());
                     }
 
                     return getServicesFromFilteredUsers(search, types, order, page, limit, students, filteredStudents, userInfos);
@@ -239,7 +245,7 @@ public class ServiceService {
                     int totalUsers = finalUsersIds.size();
 
                     return setResponseListServiceGlobalInfos(students, userInfos, totalUsers)
-                            .chain(responseListServiceGlobalInfos -> buildResponseListService(order, page, limit, finalUsersIds, filteredStudents, userInfos, responseListServiceGlobalInfos))
+                            .chain(responseListServiceGlobalInfos -> buildResponseListService(order, page, limit, finalUsersIds, filteredStudents, responseListServiceGlobalInfos))
                             .onFailure().recoverWithUni(err -> {
                                 String errorMessage = "[SwarmApi@%s::getServicesFromFilteredUsers] Failed to create responseListServiceGlobalInfos : %s";
                                 log.error(String.format(errorMessage, this.getClass().getSimpleName(), err.getMessage()));
@@ -253,12 +259,11 @@ public class ServiceService {
                 });
     }
 
-    private Uni<ResponseListService> buildResponseListService(Order order, int page, int limit, List<String> usersIds, List<User> filteredStudents,
-                                                              UserInfos userInfos, ResponseListServiceGlobalInfos responseListServiceGlobalInfos) {
+    private Uni<ResponseListService> buildResponseListService(Order order, int page, int limit, List<String> usersIds, List<User> filteredStudents, ResponseListServiceGlobalInfos responseListServiceGlobalInfos) {
         return serviceRepository.listByUserIdsAndSort(usersIds, order)
             .chain(services -> {
                 List<ResponseListServiceUser> users = new ArrayList<>();
-                List<String> usersIdsFromFilteredServices = getUserIdsFromFilteredServices(services, page, limit);
+                List<String> usersIdsFromFilteredServices = applyPagination(services, page, limit);
                 usersIdsFromFilteredServices.forEach(userId -> {
                     List<Service> userServices = services.stream()
                             .filter(service -> service.getUserId().equals(userId))
@@ -271,15 +276,14 @@ public class ServiceService {
                                 }
                             }).toList();
 
-                    List<ClassInfos> userClasses = filteredStudents.stream()
+                    User currentStudent = filteredStudents.stream()
                             .filter(student -> student.getId().equals(userId))
                             .findFirst()
-                            .map(User::getClasses)
                             .orElse(null);
 
                     ResponseListServiceUser user = new ResponseListServiceUser()
-                            .setStructures(userInfos.getStructures())
-                            .setClasses(userClasses)
+                            .setStructures(currentStudent != null ? currentStudent.getStructures() : new ArrayList<>())
+                            .setClasses(currentStudent != null ? currentStudent.getClasses() : new ArrayList<>())
                             .setServices(userServices);
                     users.add(user);
                 });
@@ -306,16 +310,21 @@ public class ServiceService {
 
             String classId = Optional.ofNullable(user.getClasses())
                     .filter(classes -> !classes.isEmpty())
-                    .map(List::getFirst) // Si l'élève a plusieurs classes, on prend la premiere. (NORMALEMENT CAS IMPOSSIBLE MULTI-CLASS)
+                    .map(List::getFirst) // Si l'utilisateur a plusieurs classes, on prend la premiere. (NORMALEMENT CAS IMPOSSIBLE POUR LES ÉLÈVES)
                     .map(ClassInfos::getId)
+                    .orElse(null);
+
+            String structureId = Optional.ofNullable(user.getStructures())
+                    .filter(structures -> !structures.isEmpty())
+                    .map(List::getFirst) // Si l'utilisateur a plusieurs structures, on prend la premiere. (NORMALEMENT CAS IMPOSSIBLE POUR LES ÉLÈVES)
+                    .map(StructureInfos::getId)
                     .orElse(null);
 
             service.setUserId(user.getId())
                     .setFirstName(user.getFirstName())
                     .setLastName(user.getLastName())
-                    .setLogin(user.getLogin())
                     .setServiceName(PathType.getValue(type))
-                    .setStructureId(user.getStructure())
+                    .setStructureId(structureId)
                     .setType(type)
                     .setMail(user.getMail())
                     .setClassId(classId)
@@ -353,7 +362,8 @@ public class ServiceService {
 
     private Uni<ResponseListServiceGlobalInfos> createResponse(List<User> filteredStudents, UserInfos userInfos, int totalUsers) {
         List<String> structureIds = filteredStudents.stream()
-                .map(User::getStructure)
+                .flatMap(student -> student.getStructures().stream())
+                .map(StructureInfos::getId)
                 .distinct()
                 .toList();
 
@@ -367,24 +377,17 @@ public class ServiceService {
                 .distinct()
                 .toList();
 
-        List<UserInfos> userInfosList = filteredStudents.stream()
-                .map(student -> new UserInfos()
-                        .setId(student.getId())
-                        .setFirstName(student.getFirstName())
-                        .setLastName(student.getLastName()))
-                .toList();
-
         ResponseListServiceGlobalInfos response = new ResponseListServiceGlobalInfos()
                 .setTotalUsers((long) totalUsers)
                 .setStructures(structureInfos)
                 .setClasses(classInfos)
-                .setUsers(userInfosList);
+                .setUsers(filteredStudents);
 
         return Uni.createFrom().item(response);
     }
 
 
-    private List<String> getUserIdsFromFilteredServices(List<Service> services, int page, int limit) {
+    private List<String> applyPagination(List<Service> services, int page, int limit) {
         return services.stream()
                 .map(Service::getUserId)
                 .distinct()

@@ -1,4 +1,4 @@
-package fr.cgi.learninghub.swarm.constants;
+package fr.cgi.learninghub.swarm.core.constants;
 
 public class Traces {
     public static final String SEND_MAIL = "SEND_MAIL";
