@@ -1,5 +1,34 @@
+# Ignore everything by default
 *
+
+# For multi-stage Docker builds that build from source
+# Allow source files and build configuration
+!src/
+!config/
+!pom.xml
+!mvnw
+!mvnw.cmd
+!.mvn/
+!settings.xml
+
+# For builds using pre-built artifacts
+# Allow Quarkus build output
 !target/*-runner
 !target/*-runner.jar
 !target/lib/*
 !target/quarkus-app/*
+
+# Explicitly ignore unnecessary files even if parent is allowed
+**/.git/
+**/.gitignore
+**/.DS_Store
+**/node_modules/
+**/target/classes/
+**/target/generated-sources/
+**/target/maven-status/
+**/target/maven-archiver/
+**/*.md
+!README.md
+.env
+.env.*
+!.env.example
